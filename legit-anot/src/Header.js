@@ -10,6 +10,9 @@ export default class Header extends Component {
       <li className="nav-item">
         <a className="nav-link" data-widget="pushmenu" href="#"><i className="fas fa-bars" /></a>
       </li>
+      <li className="nav-item d-none d-sm-inline-block">
+        <a href="#" className="nav-link "><strong>Legit anot?</strong></a>
+      </li>
     </ul>
     {/* SEARCH FORM */}
     <form className="form-inline ml-3">

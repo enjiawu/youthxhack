@@ -1,6 +1,17 @@
 import React, { Component } from 'react'
 
 export default class Dashboard extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+        link: '',  // State to manage the input value
+    };
+  }
+
+  handleInputChange = (event) => {
+      this.setState({ link: event.target.value });
+  };
+
     render() {
         return (
             <div>
@@ -25,6 +36,28 @@ export default class Dashboard extends Component {
     {/* Main content */}
     <section className="content">
       <div className="container-fluid">
+        {/* Link Input Section */}
+        <div className="row">
+          <div className="col-12">
+              <div className="card">
+                  <div className="card-header">
+                      <h3 className="card-title">Enter a Link</h3>
+                  </div>
+                  <div className="card-body">
+                      <input 
+                          type="text" 
+                          className="form-control" 
+                          placeholder="Enter link here..." 
+                          value={this.state.link} 
+                          onChange={this.handleInputChange}
+                      />
+                      <p className="mt-3">SSL: </p>
+                  </div>
+              </div>
+          </div>
+      </div>
+      {/* /.row */}
+      
         {/* Small boxes (Stat box) */}
         <div className="row">
           <div className="col-lg-3 col-6">
