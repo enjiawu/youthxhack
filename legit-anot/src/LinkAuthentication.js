@@ -16,36 +16,6 @@ export function normalizeURL(url) {
   return url;
 }
 
-const GOOGLE_AI_API_KEY = 'AIzaSyDnPeu43l-sXIt2HQ5V0aoqqP8KcS-L98c';
-
-export async function analyzeUrl(url) {
-  const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const prompt = `based on these factors analyse the safety and legitimacy of this url, ${url}, give me a rating low/medium/high in terms of safety and legitimacy. only return a clear rating of ow medium or high for the overall rating. without any elaboration
-Domain Extension
-Domain Age
-Whois Information
-Professionalism of Content
-Contact Information
-HTTPS in URL
-Copyright and Privacy Policies
-Online Reviews
-Third-Party Certifications
-Social Media Presence
-SSL Certificate
-Payment Gateways
-Malware and Phishing Checks
-Domain Blacklist Checks
-Website Speed
-Suspicious Requests
-Intrusive Ads`;
-
-  const result = await model.generateContent(prompt);
-  console.log(result.response.text());
-}
-
-
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -68,6 +38,7 @@ export default class LinkAuthentication extends Component {
     barColor: '#FF0000',
     issuer: 'NA',
     hasThreats: false,
+    safetyRating: 'Unknown',
   };
 
   handleInputChange = (event) => {
@@ -366,6 +337,35 @@ export default class LinkAuthentication extends Component {
     }
   };
 
+  analyzeUrl = async (url) => {
+    const genAI = new GoogleGenerativeAI('AIzaSyDnPeu43l-sXIt2HQ5V0aoqqP8KcS-L98c');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
+    const prompt = `based on these factors analyse the safety and legitimacy of this url, ${url}, give me a rating low/medium/high in terms of safety and legitimacy. only return a clear rating of ow medium or high for the overall rating. high should be for safe and legitimate sites, low should be for unsafe and illegitimate sites. medium should be for sites that are in between. if there are any words like malicious or threats, it is likely to be a dangerous website. it does not matter if it is from google. without any elaboration. factors to consider are: 
+  Domain Extension
+  Domain Age
+  Whois Information
+  Professionalism of Content
+  Contact Information
+  HTTPS in URL
+  Copyright and Privacy Policies
+  Online Reviews
+  Third-Party Certifications
+  Social Media Presence
+  SSL Certificate
+  Payment Gateways
+  Malware and Phishing Checks
+  Domain Blacklist Checks
+  Website Speed
+  Suspicious Requests
+  Intrusive Ads`;
+  
+    const result = await model.generateContent(prompt);
+    const rating = result.response.text().toLowerCase();
+    const safetyRating = rating.includes('low') ? 'Low' : rating.includes('medium') ? 'Medium' : rating.includes('high') ? 'High' : 'Unknown';
+    this.setState({ safetyRating: safetyRating });
+  }
+
   // Function to format numbers
   formatNumber = (num) => {
     if (num >= 1000000000) {
@@ -582,10 +582,15 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#2c3e50' }}>
+          <div className="small-box" style={{ backgroundColor: 
+          this.state.safetyRating == "High" ? '#28a745' : 
+          this.state.safetyRating == "Medium" ? 'yellow' : 
+          this.state.safetyRating == "Low" ? 'red' : 
+          this.state.safetyRating == "Unknown" ? 'gray' : 
+          '#6c757d' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>65</h3>
-              <p style ={{color : 'white'}}>AI Risk Rating <i className="fas fa-info-circle info-icon" title="Risk rating of link according to AI evaluation"></i></p>
+              <h3 style ={{color : 'black'}}>{this.state.safetyRating}</h3>
+              <p style ={{color : 'black'}}>AI Safety Rating <i className="fas fa-info-circle info-icon" title="Risk rating of link according to AI evaluation"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-robot" />
@@ -595,10 +600,10 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#fffff4' }}>
+          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? '#28a745' : '#28a745'}}>
             <div className="inner">
-              <h3 style ={{color : this.state.hasThreats ? 'darkred' : 'black'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
-              <p style ={{color : this.state.hasThreats ? 'darkred' : 'black'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
+              <h3 style ={{color : 'white'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
+              <p style ={{color : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
             </div>
             <div className="icon">
               <i className={this.state.hasThreats ? 'fas fa-exclamation-triangle' : 'fas fa-ban'} />
