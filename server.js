@@ -325,37 +325,6 @@ app.post('/api/check-safe', async (req, res) => {
     }
 });
 
-const GOOGLE_AI_API_KEY = 'AIzaSyDnPeu43l-sXIt2HQ5V0aoqqP8KcS-L98c';
-
-const geminiAPI = axios.create({
-    baseURL: 'https://api.gemini.ai',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GOOGLE_AI_API_KEY}` // Replace with your actual Gemini API key
-    }
-});
-
-app.post('/api/analyze-url', async (req, res) => {
-    const { url } = req.body;
-
-    if (!url) {
-        throw new Error('URL parameter is required');
-    }
-
-    try {
-        const response = await geminiAPI.post('/generate', {
-        url,
-        scan_type: 'url'
-        });
-
-        return response.data;
-    } catch (error) {
-        console.error('Error analyzing URL:', error);
-        throw error; // Re-throw for further handling if needed
-    }
-});
-
-
 // Start the server
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
