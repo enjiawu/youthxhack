@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 export default class LinkSafe extends Component {
   constructor(props) {
@@ -10,6 +11,7 @@ export default class LinkSafe extends Component {
         { id: 1, url: 'https://example.com', upvotes: 10, downvotes: 2 },
         { id: 2, url: 'https://anotherexample.com', upvotes: 5, downvotes: 0 },
       ],
+      sortBy: 'upvotes', // Default sorting criteria
     };
   }
 
@@ -82,51 +84,59 @@ export default class LinkSafe extends Component {
                       value={link}
                       onChange={this.handleInputChange}
                     />
-
                   </div>
                 </div>
               </div>
 
               {/* Websites List */}
               <div className="row">
-                {sortedWebsites.map(website => (
-                  <div className="col-12" key={website.id}>
-                    <div className="card mb-3">
-                      <div className="card-body d-flex align-items-center">
-                        <a 
-                          href={website.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="me-3 flex-grow-1 text-truncate"
-                        >
-                          {website.url}
-                        </a>
-                        <div className="d-flex align-items-center me-3">
-                          <button
-                            className="btn btn-success btn-sm me-2 mx-2"
-                            onClick={() => this.handleUpvote(website.id)}
+                {sortedWebsites.length > 0 ? (
+                  sortedWebsites.map(website => (
+                    <div className="col-12" key={website.id}>
+                      <div className="card mb-3">
+                        <div className="card-body d-flex align-items-center">
+                          <a 
+                            href={website.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="me-3 flex-grow-1 text-truncate"
                           >
-                            <i className="bi bi-caret-up" /> {website.upvotes}
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm me-2"
-                            onClick={() => this.handleDownvote(website.id)}
+                            {website.url}
+                          </a>
+                          <div className="d-flex align-items-center me-3">
+                            <button
+                              className="btn btn-success btn-sm me-2 mx-2"
+                              onClick={() => this.handleUpvote(website.id)}
+                            >
+                              <i className="bi bi-caret-up" /> {website.upvotes}
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm me-2"
+                              onClick={() => this.handleDownvote(website.id)}
+                            >
+                              <i className="bi bi-caret-down" /> {website.downvotes}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="card-footer text-center">
+                          <Link
+                            to={{
+                              pathname: '/',
+                              state: { link: website.url }
+                            }}
+                            className="btn btn-primary btn-sm px-5"
                           >
-                            <i className="bi bi-caret-down" /> {website.downvotes}
-                          </button>
+                            See More
+                          </Link>
                         </div>
                       </div>
-                      <div className="card-footer text-center">
-                        <a 
-                          href={`/more-details/${website.id}`} 
-                          className="btn btn-primary btn-sm px-5"
-                        >
-                          See More
-                        </a>
-                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="col-12 text-center">
+                    <p>No websites found.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </section>
