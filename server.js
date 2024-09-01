@@ -87,6 +87,16 @@ async function fetchTrafficData(database, targetUrl) {
     }
 }
 
+async function fetchVisitDuration(database,targetUrl){
+    try{
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.averageVisitDurationInMin : null;
+    }catch(error){
+        console.error(err);
+        throw new Error('Error fetching visit duration');
+    }
+}
 
 app.get('/api/likes-dislikes', async (req, res) => {
     const targetUrl = req.query.url;
@@ -118,6 +128,20 @@ app.get("/getTrafficObject", async (req, res) => {
     }
 });
 
+app.get("/getVisitDuration", async(req,res) =>{
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchVisitDuration(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+})
 
 app.post('/api/upvote', async (req, res) => {
     console.log("CALLED")

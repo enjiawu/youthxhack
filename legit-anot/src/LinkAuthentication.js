@@ -42,6 +42,7 @@ export default class LinkAuthentication extends Component {
     this.state = {
         link: '',  // State to manage the input value
         totalVisits:{},// initialize as empty object
+        visitDuration:{},
         error:null
     };
   }
@@ -132,6 +133,7 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchTotalVisit = async (url) => {
+    console.log('WASUP');
     try {
       // Normalize the URL (if necessary) before making the request
       const normalizedUrl = encodeURIComponent(url);
@@ -165,7 +167,45 @@ export default class LinkAuthentication extends Component {
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
+  };
+
+  
+  fetchVisitDuration = async (url) => {
+    try {
+      // Normalize the URL (if necessary) before making the request
+      const normalizedUrl = encodeURIComponent(url);
+
+      // Make a GET request to the /getTrafficObject/:url endpoint
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${encodeURIComponent(normalizeURL(url))}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Fetched visit duration successfully:', data);
+
+      const visitDuration = data;
+      console.log('TOTAL DURATION');
+      console.log(visitDuration);
+      // Update the state or perform actions with fetched data
+      // Assuming you're using React or similar for state management
+      this.setState({
+        visitDuration: visitDuration,
+      });
+      console.log(visitDuration.monthly);
+    } catch (error) {
+      console.error('Error fetching visit duration:', error);
+    }
 };
+
 
 
   getBarColor() {
@@ -292,7 +332,7 @@ export default class LinkAuthentication extends Component {
                     type="button" 
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
-                    onClick={() => { this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
+                    onClick={() => { this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
                   >
                     Check
                   </button>
@@ -424,7 +464,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>80</h3>
+              <h3 style ={{color : 'white'}}>{this.state.visitDuration.monthly}</h3>
               <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
             </div>
             <div className="icon">
