@@ -61,12 +61,10 @@ export default class Dashboard extends Component {
 
   getBarColor() {
     const communityRating = this.state.communityRating;
-    if (communityRating < 34) {
+    if (communityRating < 60) {
       this.state.barColor = '#FF0000'; // Red
-      document.querySelector('.progress-bar').style.backgroundColor = '#FF0000';
-    } else if (communityRating < 67) {
+    } else if (communityRating < 80) {
       this.state.barColor = '#FFC107'; // Amber 
-      document.querySelector('.progress-bar').style.backgroundColor = '#FFC107';
     } else {
       this.state.barColor = '#28A745'; // Green
     }
