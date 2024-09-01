@@ -335,6 +335,19 @@ export default class LinkAuthentication extends Component {
     }
   };
 
+  // Function to format numbers
+  formatNumber = (num) => {
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1) + 'B';
+    } else if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    } else {
+      return num;
+    }
+  };
+
   render() {
       const ratingClass = this.getRatingClass();
       return (
@@ -484,7 +497,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
-              <h3>{this.state.totalVisits.monthly}</h3>
+              <h3>{this.formatNumber(this.state.totalVisits.monthly)}</h3>
               <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
             </div>
             <div className="icon">
@@ -514,7 +527,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.state.visitDuration.monthly}</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}</h3>
               <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
             </div>
             <div className="icon">
