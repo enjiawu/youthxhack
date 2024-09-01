@@ -10,7 +10,8 @@ export default class Dashboard extends Component {
 
   state = {
     link: '',
-    isSubmitted: false
+    isSubmitted: false,
+    isVoted : false,
   };
 
   handleInputChange = (event) => {
@@ -21,12 +22,59 @@ export default class Dashboard extends Component {
     this.setState({ isSubmitted: true });
   };
 
-  handleUpvote = () => {
-    // Handle upvote logic
+  handleVote = () => {
+    this.setState({ isVoted: true });
+    this.setState({ isSubmitted: false });
+  }
+
+  handleUpvote = async (url) => {
+    try {
+      // Make a POST request to the /api/upvote endpoint
+      const response = await fetch('http://localhost:3000/api/upvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url }), // Send the URL in the body
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Upvote successful:', data);
+      this.handleVote();
+    } catch (error) {
+      console.error('Error during upvote:', error);
+    }
   };
 
-  handleDownvote = () => {
-    // Handle downvote logic
+  handleDownvote = async (url) => {
+    try {
+      // Make a POST request
+      const response = await fetch('http://localhost:3000/api/downvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url }), // Send the URL in the body
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Upvote successful:', data);
+      this.handleVote();
+    } catch (error) {
+      console.error('Error during downvote:', error);
+    }
   };
 
     render() {
@@ -78,28 +126,36 @@ export default class Dashboard extends Component {
                     Check
                   </button>
                 </div>
-                {this.state.isSubmitted && (
                 <div className="mt-4 d-flex flex-column align-items-center">
+                {this.state.isSubmitted && (
+                  <div>
                   <p className="mb-1">Do you think this link is legit?</p>
                   <div className="d-flex">
                     <button 
                       type="button" 
                       className="btn btn-success btn-sm me-2"
-                      onClick={this.handleUpvote}
+                      onClick={() => this.handleUpvote(this.state.link)}
                     >
                       <i className="bi bi-caret-up" style={{ fontSize: '0.5rem' }}></i> Yes
                     </button>
                     <button 
                       type="button" 
                       className="btn btn-danger btn-sm "
-                      onClick={this.handleDownvote}
+                      onClick={() => this.handleDownvote(this.state.link)}
                       style = {{ marginLeft: "10px" }}
                     >
                       <i className="bi bi-caret-down" style={{ fontSize: '0.5rem'}}></i> No
                     </button>
                   </div>
+                  </div>
+                )}
+                  {this.state.isVoted && (
+                  <div>
+                    <p className="mb-1">Thank you for voting!</p>
+                  </div>  
+                  )}
                 </div>
-              )}
+
               </div>
             </div>
           </div>
