@@ -76,6 +76,18 @@ async function downvote(database, targetUrl) {
     }
 }
 
+async function fetchTrafficData(database, targetUrl) {
+    try {
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.totalVisit : null;
+    } catch (err) {
+        console.error(err);
+        throw new Error('Error fetching traffic data');
+    }
+}
+
+
 app.get('/api/likes-dislikes', async (req, res) => {
     const targetUrl = req.query.url;
     if (!targetUrl) {
@@ -90,6 +102,22 @@ app.get('/api/likes-dislikes', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.get("/getTrafficObject", async (req, res) => {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchTrafficData(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 app.post('/api/upvote', async (req, res) => {
     console.log("CALLED")
