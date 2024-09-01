@@ -32922,13 +32922,14 @@ a.text-muted:hover {
 /*# sourceMappingURL=adminlte.css.map */
 
 
-/* Basic tooltip styles */
-p[title] {
-  position: relative;
+/* Info icon styles */
+.info-icon {
+  margin-left: 5px;
+  color: #007bff; /* Blue color for the info icon */
   cursor: pointer;
 }
 
-p[title]::after {
+.info-icon::after {
   content: attr(title);
   position: absolute;
   bottom: 100%;
@@ -32945,7 +32946,8 @@ p[title]::after {
   font-size: 14px;
 }
 
-p[title]:hover::after {
+.info-icon:hover::after {
   opacity: 1;
   visibility: visible;
 }
+
