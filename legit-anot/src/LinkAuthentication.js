@@ -106,6 +106,43 @@ export default class LinkAuthentication extends Component {
     }
   };
 
+  fetchTotalVisit = async (url) => {
+    try {
+      // Normalize the URL (if necessary) before making the request
+      const normalizedUrl = encodeURIComponent(url);
+
+      // Make a GET request to the /getTrafficObject/:url endpoint
+      const response = await fetch(`http://localhost:3000/getTrafficObject/${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('HII');
+      console.log('Fetched total visits successfully:', data);
+
+      // Assuming data contains the monthly visit statistics as an object
+      const totalVisits = data; // Adjust this based on actual data structure
+
+      // Update the state or perform actions with fetched data
+      // Assuming you're using React or similar for state management
+      this.setState({
+        totalVisits: totalVisits,
+      });
+    } catch (error) {
+      console.error('Error fetching total visits:', error);
+    }
+};
+
+
   getBarColor() {
     const communityRating = this.state.communityRating;
     if (communityRating < 60) {
@@ -230,7 +267,7 @@ export default class LinkAuthentication extends Component {
                     type="button" 
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
-                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
+                    onClick={() => { this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
                   >
                     Check
                   </button>
@@ -330,7 +367,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
-              <h3>44</h3>
+              <h3>{totalVisits}</h3>
               <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
             </div>
             <div className="icon">
