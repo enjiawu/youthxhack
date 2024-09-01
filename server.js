@@ -6,7 +6,7 @@ const tls = require('tls');
 const url = require('url');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
-
+const axios = require('axios'); 
 
 const app = express();
 const port = 5050;
@@ -163,6 +163,58 @@ app.get('/api/ssl-cert', async (req, res) => {
         res.json(certificate);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching SSL certificate info' });
+    }
+});
+
+const GOOGLE_API_KEY = 'AIzaSyByeLBjadSQnJ7AdU5SIcV7ZBKZwRu0eCk';
+const GOOGLE_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_API_KEY}`;
+
+// Function to check if a website is safe using Google Safe Browsing API
+const checkGoogleSafeBrowsing = async (url) => {
+    try {
+        const response = await axios.post(GOOGLE_API_URL, {
+            client: {
+                clientId: 'legit_anot',
+                clientVersion: '1.0.0',
+            },
+            threatInfo: {
+                threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING'],
+                platformTypes: ['ANY_PLATFORM'],
+                threatEntryTypes: ['URL'],
+                threatEntries: [{ url }],
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error checking website safety:', error);
+        throw error;
+    }
+};
+
+
+// API endpoint to check if a website is safe
+app.post('/api/check-safe', async (req, res) => {
+    const { url } = req.body;
+
+    if (!url) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+
+    console.log('Received URL:', url); // Log the URL to ensure it's what you expect
+
+    try {
+        const result = await checkGoogleSafeBrowsing(url);
+
+        const hasThreats = result.matches && result.matches.length > 0;
+
+        res.json({
+            hasThreats,
+            threats: result.matches || [],
+        });
+    } catch (error) {
+        console.error('Error checking website safety:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
