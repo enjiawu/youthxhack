@@ -1,10 +1,11 @@
-import React, { Component } from 'react'
+import React, { Component, useState, useEffect } from 'react'
 
 export default class Dashboard extends Component {
   constructor(props) {
     super(props);
     this.state = {
         link: '',  // State to manage the input value
+        monthlyVisit: '', // State to manage the fetched data
     };
   }
 
@@ -12,7 +13,22 @@ export default class Dashboard extends Component {
       this.setState({ link: event.target.value });
   };
 
+  handleSubmit = () =>{
+    console.log('HIII');
+    // const {link} = this.state;
+    const link = "https://www.youtube.com/"
+    // Encode the URL before making request
+    const encodedLink = encodeURIComponent(link);
+    console.log(link);
+    fetch(`http://localhost:3000/getTrafficObject/${encodedLink}`)
+    .then((res) => res.json())
+    .then((data) => this.setState({monthlyVisit: data.message}))
+    .catch((error) => console.error('Error fetching data',error));
+  };
+
     render() {
+      const {link,monthlyVisit} = this.state;
+
         return (
             <div>
   <div className="content-wrapper">
@@ -51,6 +67,7 @@ export default class Dashboard extends Component {
                           value={this.state.link} 
                           onChange={this.handleInputChange}
                       />
+                      <button className='btn btn-primary mt-2' onClick={this.handleSubmit}> Fetch Data</button>
                   </div>
               </div>
           </div>
@@ -90,6 +107,7 @@ export default class Dashboard extends Component {
         <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
           <div className="inner">
             <h3>44</h3>
+            <h3>{monthlyVisit}</h3>
             <p title="Number of times users have visited the site">Visits</p>
           </div>
           <div className="icon">
