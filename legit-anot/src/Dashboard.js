@@ -10,7 +10,11 @@ export default class Dashboard extends Component {
 
   state = {
     link: '',
-    isSubmitted: false
+    isSubmitted: false,
+    isVoted : false,
+    totalVotes : 0,
+    communityRating: 0,
+    barColor: '#FF0000',
   };
 
   handleInputChange = (event) => {
@@ -19,14 +23,114 @@ export default class Dashboard extends Component {
 
   handleSubmit = () => {
     this.setState({ isSubmitted: true });
+    this.setState({ isVoted: false });
   };
 
-  handleUpvote = () => {
-    // Handle upvote logic
+  fetchLikesDislikes = async (url) => {
+    try {
+      // Make a GET request to the /api/likes-dislikes endpoint
+      const response = await fetch(`http://localhost:5050/api/likes-dislikes?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Fetched likes/dislikes successfully:', data);
+  
+      // Calculate total votes and community rating
+      const totalVotes = data.likes + data.dislikes;
+      const communityRating = totalVotes > 0 ? (data.likes / totalVotes) * 100 : 0;
+  
+      // Update the component's state with the fetched data
+      this.setState({
+        totalVotes: totalVotes,
+        communityRating: Math.round(communityRating),
+      });
+    } catch (error) {
+      console.error('Error fetching likes/dislikes:', error);
+    }
   };
 
-  handleDownvote = () => {
-    // Handle downvote logic
+  getBarColor() {
+    const communityRating = this.state.communityRating;
+    if (communityRating < 34) {
+      this.state.barColor = '#FF0000'; // Red
+      document.querySelector('.progress-bar').style.backgroundColor = '#FF0000';
+    } else if (communityRating < 67) {
+      this.state.barColor = '#FFC107'; // Amber 
+      document.querySelector('.progress-bar').style.backgroundColor = '#FFC107';
+    } else {
+      this.state.barColor = '#28A745'; // Green
+    }
+    console.log(this.state.communityRating);
+  }
+
+  handleVote = () => {
+    this.setState({ isVoted: true });
+  }
+
+  handleUpvote = async (url) => {
+    if (this.state.isVoted) {
+      return;
+    }
+    try {
+      // Make a POST request to the /api/upvote endpoint
+      const response = await fetch('http://localhost:5050/api/upvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url }), // Send the URL in the body
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Upvote successful:', data);
+      this.handleVote();
+    } catch (error) {
+      console.error('Error during upvote:', error);
+    }
+  };
+
+  handleDownvote = async (url) => {
+    if (this.state.isVoted) {
+      return;
+    }
+    try {
+      // Make a POST request
+      const response = await fetch('http://localhost:5050/api/downvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url }), // Send the URL in the body
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Upvote successful:', data);
+      this.handleVote();
+    } catch (error) {
+      console.error('Error during downvote:', error);
+    }
   };
 
   getRatingClass = () => {
@@ -81,7 +185,7 @@ export default class Dashboard extends Component {
                     type="button" 
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
-                    onClick={this.handleSubmit}
+                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); }}
                   >
                     Check
                   </button>
@@ -93,18 +197,42 @@ export default class Dashboard extends Component {
                     <button 
                       type="button" 
                       className="btn btn-success btn-sm me-2"
-                      onClick={this.handleUpvote}
+                      onClick={() => this.handleUpvote(this.state.link)}
                     >
                       <i className="bi bi-caret-up" style={{ fontSize: '0.5rem' }}></i> Yes
                     </button>
                     <button 
                       type="button" 
                       className="btn btn-danger btn-sm "
-                      onClick={this.handleDownvote}
+                      onClick={() => this.handleDownvote(this.state.link)}
                       style = {{ marginLeft: "10px" }}
                     >
                       <i className="bi bi-caret-down" style={{ fontSize: '0.5rem'}}></i> No
                     </button>
+                    
+                  </div>
+                  {this.state.isVoted && (
+                    <div>
+                      <p className="mb-1">Thank you for voting!</p>
+                    </div>  
+                    )}
+                  <div className="mt-4 w-100">
+                    <p className="mb-2">Community Rating</p>
+                    <div className="progress">
+                      <div 
+                        className={`progress-bar`} 
+                        role="progressbar" 
+                        style={{ 
+                          width: `${this.state.communityRating}%`, 
+                          backgroundColor: this.state.barColor,
+                        }}
+                        aria-valuenow={this.state.communityRating} 
+                        aria-valuemin="0" 
+                        aria-valuemax="100"
+                      >
+                        {this.state.communityRating}% total votes: {this.state.totalVotes}
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-4 w-100">
                     <p className="mb-2">Overall Rating</p>
