@@ -77,16 +77,50 @@ async function downvote(database, targetUrl) {
 }
 
 async function fetchTrafficData(database, targetUrl) {
+    console.log('Fetching traffic data for URL:', targetUrl); // Debugging line
     try {
         const collection = database.collection('traffic');
         const result = await collection.findOne({ url: targetUrl });
         return result ? result.totalVisit : null;
     } catch (err) {
-        console.error(err);
+        console.error('Error:', err);
         throw new Error('Error fetching traffic data');
     }
 }
 
+
+async function fetchVisitDuration(database,targetUrl){
+    try{
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.averageVisitDurationInMin : null;
+    }catch(error){
+        console.error(err);
+        throw new Error('Error fetching visit duration');
+    }
+}
+
+async function fetchPagesPerVisit(database,targetUrl){
+    try{
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.pagesPerVisit : null;
+    }catch(error){
+        console.error(err);
+        throw new Error('Error fetching pages per visit');
+    }
+}
+
+async function fetchBounceRate(database,targetUrl){
+    try{
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.bounceRate : null;
+    }catch(error){
+        console.error(err);
+        throw new Error('Error fetching bounce rate');
+    }
+}
 
 app.get('/api/likes-dislikes', async (req, res) => {
     const targetUrl = req.query.url;
@@ -118,6 +152,51 @@ app.get("/getTrafficObject", async (req, res) => {
     }
 });
 
+app.get("/getVisitDuration", async(req,res) =>{
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    console.log('Target URL:', targetUrl); // Check what URL is being used
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchVisitDuration(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
+
+app.get("/getPagesPerVisit", async(req,res) =>{
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchPagesPerVisit(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
+
+app.get("/getBounceRate", async(req,res) =>{
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchBounceRate(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
 
 app.post('/api/upvote', async (req, res) => {
     console.log("CALLED")

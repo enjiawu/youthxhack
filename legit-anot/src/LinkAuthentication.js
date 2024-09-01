@@ -52,6 +52,9 @@ export default class LinkAuthentication extends Component {
     this.state = {
         link: '',  // State to manage the input value
         totalVisits:{},// initialize as empty object
+        visitDuration:{},
+        pagesPerVisit:{},
+        bounceRate:{},
         error:null
     };
   }
@@ -144,40 +147,103 @@ export default class LinkAuthentication extends Component {
 
   fetchTotalVisit = async (url) => {
     try {
-      // Normalize the URL (if necessary) before making the request
       const normalizedUrl = encodeURIComponent(url);
-
-      // Make a GET request to the /getTrafficObject/:url endpoint
-      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(normalizeURL(url))}`, {
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      // Check if the response is ok (status code 200-299)
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
 
-      // Parse and handle the JSON response
       const data = await response.json();
-      console.log('Fetched total visits successfully:', data);
+      console.log('Fetched total visits successfully:', data); // Debugging line
 
-      // Assuming data contains the monthly visit statistics as an object
-      const totalVisits = data; // Adjust this based on actual data structure
-
-      // Update the state or perform actions with fetched data
-      // Assuming you're using React or similar for state management
       this.setState({
-        totalVisits: totalVisits,
+        totalVisits: data,
       });
-      console.log(totalVisits.monthly);
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
-};
+  };
 
+  fetchVisitDuration = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched visit duration successfully:', data); // Debugging line
+
+      this.setState({
+        visitDuration: data,
+      });
+    } catch (error) {
+      console.error('Error fetching visit duration:', error);
+    }
+  }; 
+
+  fetchPagesPerVisit = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched pages per visit successfully:', data); // Debugging line
+
+      this.setState({
+        pagesPerVisit: data,
+      });
+    } catch (error) {
+      console.error('Error fetching visit duration:', error);
+    }
+  }; 
+
+  fetchBounceRate = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched bounce rate successfully:', data); // Debugging line
+
+      this.setState({
+        bounceRate: data,
+      });
+    } catch (error) {
+      console.error('Error fetching bounce rate:', error);
+    }
+  };
 
   getBarColor() {
     const communityRating = this.state.communityRating;
@@ -300,6 +366,19 @@ export default class LinkAuthentication extends Component {
     }
   };
 
+  // Function to format numbers
+  formatNumber = (num) => {
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1) + 'B';
+    } else if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    } else {
+      return num;
+    }
+  };
+
   render() {
       const ratingClass = this.getRatingClass();
       return (
@@ -346,7 +425,8 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+                    onClick={() => { this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+
                   >
                     Check
                   </button>
@@ -448,7 +528,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
-              <h3>{this.state.totalVisits.monthly}</h3>
+              <h3>{this.formatNumber(this.state.totalVisits.monthly)}</h3>
               <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
             </div>
             <div className="icon">
@@ -461,7 +541,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
             <div className="inner">
-              <h3>65</h3>
+              <h3>{this.state.pagesPerVisit.monthly}</h3>
               <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
             </div>
             <div className="icon">
@@ -478,7 +558,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>80</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}</h3>
               <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
             </div>
             <div className="icon">
@@ -491,7 +571,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>120</h3>
+              <h3 style ={{color : 'white'}}>{this.state.bounceRate.monthly}</h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
