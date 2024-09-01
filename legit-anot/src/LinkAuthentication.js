@@ -445,10 +445,10 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#9b59b6' }}>
+          <div className="small-box" style={{ backgroundColor: '#fffff4' }}>
             <div className="inner">
-              <h3 style ={{color : this.state.hasThreats ? 'darkred' : 'white'}}>{this.state.hasThreats ? 'Yes' : 'No'}</h3>
-              <p style ={{color : this.state.hasThreats ? 'darkred' : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
+              <h3 style ={{color : this.state.hasThreats ? 'darkred' : 'black'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
+              <p style ={{color : this.state.hasThreats ? 'darkred' : 'black'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
             </div>
             <div className="icon">
               <i className={this.state.hasThreats ? 'fas fa-exclamation-triangle' : 'fas fa-ban'} />
