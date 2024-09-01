@@ -51,73 +51,100 @@ export default class Dashboard extends Component {
                           value={this.state.link} 
                           onChange={this.handleInputChange}
                       />
-                      <p className="mt-3">SSL: </p>
                   </div>
               </div>
           </div>
       </div>
       {/* /.row */}
-      
-        {/* Small boxes (Stat box) */}
-        <div className="row">
-          <div className="col-lg-3 col-6">
-            {/* small box */}
-            <div className="small-box bg-info">
-              <div className="inner">
-                <h3>150</h3>
-                <p>New Orders</p>
-              </div>
-              <div className="icon">
-                <i className="ion ion-bag" />
-              </div>
-              <a href="#" className="small-box-footer">More info <i className="fas fa-arrow-circle-right" /></a>
-            </div>
+
+     {/* Two rows with three boxes each */}
+    <div className="row">
+      <div className="col-lg-4 col-6">
+        {/* small box */}
+        <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
+          <div className="inner">
+            <h3 id="ssl-cert">yes</h3>
+            <p title="Indicates if the site has a valid SSL certificate">SSL Certificate</p>
           </div>
-          {/* ./col */}
-          <div className="col-lg-3 col-6">
-            {/* small box */}
-            <div className="small-box bg-success">
-              <div className="inner">
-                <h3>53<sup style={{fontSize: 20}}>%</sup></h3>
-                <p>Bounce Rate</p>
-              </div>
-              <div className="icon">
-                <i className="ion ion-stats-bars" />
-              </div>
-              <a href="#" className="small-box-footer">More info <i className="fas fa-arrow-circle-right" /></a>
-            </div>
+          <div className="icon">
+            <i className="fas fa-lock" />
           </div>
-          {/* ./col */}
-          <div className="col-lg-3 col-6">
-            {/* small box */}
-            <div className="small-box bg-warning">
-              <div className="inner">
-                <h3>44</h3>
-                <p>User Registrations</p>
-              </div>
-              <div className="icon">
-                <i className="ion ion-person-add" />
-              </div>
-              <a href="#" className="small-box-footer">More info <i className="fas fa-arrow-circle-right" /></a>
-            </div>
-          </div>
-          {/* ./col */}
-          <div className="col-lg-3 col-6">
-            {/* small box */}
-            <div className="small-box bg-danger">
-              <div className="inner">
-                <h3>65</h3>
-                <p>Unique Visitors</p>
-              </div>
-              <div className="icon">
-                <i className="ion ion-pie-graph" />
-              </div>
-              <a href="#" className="small-box-footer">More info <i className="fas fa-arrow-circle-right" /></a>
-            </div>
-          </div>
-          {/* ./col */}
         </div>
-        {/* /.row */}
+      </div>
+      {/* ./col */}
+      <div className="col-lg-4 col-6">
+        {/* small box */}
+        <div className="small-box" style={{ backgroundColor: '#28a745' }}>
+          <div className="inner">
+            <h3>53<sup style={{ fontSize: 20 }}>%</sup></h3>
+            <p title="Shows the percentage of checks performed for this link within our website">Checks</p>
+          </div>
+          <div className="icon">
+            <i className="fas fa-check-circle" />
+          </div>
+        </div>
+      </div>
+      {/* ./col */}
+      <div className="col-lg-4 col-6">
+        {/* small box */}
+        <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
+          <div className="inner">
+            <h3>44</h3>
+            <p title="Number of times users have visited the site">Visits</p>
+          </div>
+          <div className="icon">
+            <i className="fas fa-eye" />
+          </div>
+        </div>
+      </div>
+      {/* ./col */}
+    </div>
+    {/* /.row */}
+
+    <div className="row">
+      <div className="col-lg-4 col-6">
+        {/* small box */}
+        <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
+          <div className="inner">
+            <h3>65</h3>
+            <p title="Average number of pages viewed per visit">Pages per visit</p>
+          </div>
+          <div className="icon">
+            <i className="fas fa-file-alt" />
+          </div>
+        </div>
+      </div>
+      {/* ./col */}
+      <div className="col-lg-4 col-6">
+        {/* small box */}
+        <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
+          <div className="inner">
+            <h3>80</h3>
+            <p title="Average duration of a single visit to the site, in seconds">Average Visit Duration</p>
+          </div>
+          <div className="icon">
+            <i className="fas fa-clock" />
+          </div>
+        </div>
+      </div>
+      {/* ./col */}
+      <div className="col-lg-4 col-6">
+        {/* small box */}
+        <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
+          <div className="inner">
+            <h3>120</h3>
+            <p title="Percentage of visitors who leave the site after viewing only one page">Bounce Rate</p>
+          </div>
+          <div className="icon">
+            <i className="fas fa-percent" />
+          </div>
+        </div>
+      </div>
+      {/* ./col */}
+    </div>
+    {/* /.row */}
+
+      
         {/* Main row */}
         <div className="row">
           {/* Left col */}
