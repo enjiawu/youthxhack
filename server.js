@@ -194,13 +194,13 @@ app.get('/api/ssl-cert', async (req, res) => {
     }
 });
 
-const GOOGLE_API_KEY = 'AIzaSyByeLBjadSQnJ7AdU5SIcV7ZBKZwRu0eCk';
-const GOOGLE_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_API_KEY}`;
+const GOOGLE_SAFE_API_KEY = 'AIzaSyByeLBjadSQnJ7AdU5SIcV7ZBKZwRu0eCk';
+const GOOGLE_SAFE_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_SAFE_API_KEY}`;
 
 // Function to check if a website is safe using Google Safe Browsing API
 const checkGoogleSafeBrowsing = async (url) => {
     try {
-        const response = await axios.post(GOOGLE_API_URL, {
+        const response = await axios.post(GOOGLE_SAFE_API_URL, {
             client: {
                 clientId: 'legit_anot',
                 clientVersion: '1.0.0',
@@ -245,6 +245,37 @@ app.post('/api/check-safe', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+const GOOGLE_AI_API_KEY = 'AIzaSyDnPeu43l-sXIt2HQ5V0aoqqP8KcS-L98c';
+
+const geminiAPI = axios.create({
+    baseURL: 'https://api.gemini.ai',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GOOGLE_AI_API_KEY}` // Replace with your actual Gemini API key
+    }
+});
+
+app.post('/api/analyze-url', async (req, res) => {
+    const { url } = req.body;
+
+    if (!url) {
+        throw new Error('URL parameter is required');
+    }
+
+    try {
+        const response = await geminiAPI.post('/generate', {
+        url,
+        scan_type: 'url'
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error analyzing URL:', error);
+        throw error; // Re-throw for further handling if needed
+    }
+});
+
 
 // Start the server
 app.listen(port, () => {
