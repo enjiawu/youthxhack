@@ -1,5 +1,4 @@
-import React, { Component,useState } from 'react'
-import { checkWebsiteSafe } from './services/googleSafeBrowsingService';
+import React, { Component } from 'react'
 
 export function normalizeURL(url) {
   // Remove leading/trailing whitespace
@@ -14,26 +13,6 @@ export function normalizeURL(url) {
   url = url.replace(/^https:\/\/(?:www\.)?/, 'https://www.');
 
   return url;
-}
-
-function SafeBrowsingChecker() {
-  const [url, setUrl] = useState('');
-  const [result, setResult] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleCheck = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await checkGoogleSafeBrowsing(url);
-      setResult(data);
-    } catch (error) {
-      setError('Failed to check URL safety');
-    } finally {
-      setLoading(false);
-    }
-  };
 }
 
 export default class LinkAuthentication extends Component {
@@ -54,6 +33,7 @@ export default class LinkAuthentication extends Component {
     communityRating: 0,
     barColor: '#FF0000',
     issuer: 'NA',
+    hasThreats: false,
   };
 
   handleInputChange = (event) => {
@@ -247,10 +227,52 @@ export default class LinkAuthentication extends Component {
     return 'bg-danger'; // Red for low rating
   };
 
-    render() {
-        const ratingClass = this.getRatingClass();
-        return (
-            <div>
+  hasThreats = () => {
+    this.setState({ hasThreats: true });
+  };
+  
+  clearThreats = () => {
+    this.setState({ hasThreats: false });
+  };
+  
+  fetchGoogleSafeBrowsing = async (url) => {
+    try {
+      const response = await fetch('http://localhost:5050/api/check-safe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: normalizeURL(url) }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Google Safe Browsing API response:', data);
+  
+      // Determine if threats are found or not
+      const hasThreats = data.hasThreats;
+      console.log('Threats found:', hasThreats);
+  
+      // Update the UI based on the response
+      if (hasThreats) {
+        this.hasThreats(); // Call to set state indicating threats
+      } else {
+        this.clearThreats(); // Call to set state indicating no threats
+      }
+    } catch (error) {
+      console.error('Error checking website safety:', error);
+      // Handle error state if needed
+      this.clearThreats(); // Optionally clear threats if an error occurs
+    }
+  };
+
+  render() {
+      const ratingClass = this.getRatingClass();
+      return (
+          <div>
   <div className="content-wrapper">
     {/* Content Header (Page header) */}
     <div className="content-header">
@@ -292,7 +314,8 @@ export default class LinkAuthentication extends Component {
                     type="button" 
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
-                    onClick={() => { this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
+                    disabled={!this.state.link} // Disable button if link state is empty
+                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); }}
                   >
                     Check
                   </button>
@@ -463,11 +486,11 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#9b59b6' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>No</h3>
-              <p style ={{color : 'white'}}>Blacklists <i className="fas fa-info-circle info-icon" title="Check if link is a known malicious site"></i></p>
+              <h3 style ={{color : this.state.hasThreats ? 'darkred' : 'white'}}>{this.state.hasThreats ? 'Yes' : 'No'}</h3>
+              <p style ={{color : this.state.hasThreats ? 'darkred' : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
             </div>
             <div className="icon">
-              <i className="fas fa-ban" />
+              <i className={this.state.hasThreats ? 'fas fa-exclamation-triangle' : 'fas fa-ban'} />
             </div>
           </div>
         </div>
