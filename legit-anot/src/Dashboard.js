@@ -29,7 +29,15 @@ export default class Dashboard extends Component {
     // Handle downvote logic
   };
 
+  getRatingClass = () => {
+    const { rating } = this.state;
+    if (rating >= 80) return 'bg-success'; // Green for high rating
+    if (rating >= 60) return 'bg-warning'; // Yellow for medium rating
+    return 'bg-danger'; // Red for low rating
+  };
+
     render() {
+        const ratingClass = this.getRatingClass();
         return (
             <div>
   <div className="content-wrapper">
@@ -98,6 +106,21 @@ export default class Dashboard extends Component {
                       <i className="bi bi-caret-down" style={{ fontSize: '0.5rem'}}></i> No
                     </button>
                   </div>
+                  <div className="mt-4 w-100">
+                    <p className="mb-2">Overall Rating</p>
+                    <div className="progress">
+                      <div 
+                        className={`progress-bar ${ratingClass}`} 
+                        role="progressbar" 
+                        style={{ width: `${this.state.rating}%` }}
+                        aria-valuenow={this.state.rating} 
+                        aria-valuemin="0" 
+                        aria-valuemax="100"
+                      >
+                        {this.state.rating}%
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               </div>
@@ -108,7 +131,7 @@ export default class Dashboard extends Component {
 
       {/* Two rows with three boxes each */}
       <div className="row">
-        <div className="col-lg-4 col-6">
+        <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
             <div className="inner">
@@ -121,7 +144,7 @@ export default class Dashboard extends Component {
           </div>
         </div>
         {/* ./col */}
-        <div className="col-lg-4 col-6">
+        <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#28a745' }}>
             <div className="inner">
@@ -134,7 +157,7 @@ export default class Dashboard extends Component {
           </div>
         </div>
         {/* ./col */}
-        <div className="col-lg-4 col-6">
+        <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
@@ -147,16 +170,12 @@ export default class Dashboard extends Component {
           </div>
         </div>
         {/* ./col */}
-      </div>
-      {/* /.row */}
-
-      <div className="row">
-        <div className="col-lg-4 col-6">
+        <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>65</h3>
-              <p style ={{color : 'white'}}>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
+              <h3>65</h3>
+              <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-file-alt" />
@@ -164,7 +183,11 @@ export default class Dashboard extends Component {
           </div>
         </div>
         {/* ./col */}
-        <div className="col-lg-4 col-6">
+      </div>
+      {/* /.row */}
+
+      <div className="row">
+        <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
@@ -177,7 +200,7 @@ export default class Dashboard extends Component {
           </div>
         </div>
         {/* ./col */}
-        <div className="col-lg-4 col-6">
+        <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
@@ -186,6 +209,32 @@ export default class Dashboard extends Component {
             </div>
             <div className="icon">
               <i className="fas fa-percent" />
+            </div>
+          </div>
+        </div>
+        {/* ./col */}
+        <div className="col-lg-3 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#2c3e50' }}>
+            <div className="inner">
+              <h3 style ={{color : 'white'}}>65</h3>
+              <p style ={{color : 'white'}}>AI Risk Rating <i className="fas fa-info-circle info-icon" title="Risk rating of link according to AI evaluation"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-robot" />
+            </div>
+          </div>
+        </div>
+        {/* ./col */}
+        <div className="col-lg-3 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#9b59b6' }}>
+            <div className="inner">
+              <h3 style ={{color : 'white'}}>No</h3>
+              <p style ={{color : 'white'}}>Blacklists <i className="fas fa-info-circle info-icon" title="Check if link is a known malicious site"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-ban" />
             </div>
           </div>
         </div>
