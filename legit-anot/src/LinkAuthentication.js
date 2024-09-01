@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component,useState } from 'react'
 import { checkWebsiteSafe } from './services/googleSafeBrowsingService';
 
 function normalizeURL(url) {
@@ -41,6 +41,8 @@ export default class LinkAuthentication extends Component {
     super(props);
     this.state = {
         link: '',  // State to manage the input value
+        totalVisits:{},// initialize as empty object
+        error:null
     };
   }
 
@@ -135,7 +137,7 @@ export default class LinkAuthentication extends Component {
       const normalizedUrl = encodeURIComponent(url);
 
       // Make a GET request to the /getTrafficObject/:url endpoint
-      const response = await fetch(`http://localhost:3000/getTrafficObject/${normalizedUrl}`, {
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(normalizeURL(url))}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +151,6 @@ export default class LinkAuthentication extends Component {
 
       // Parse and handle the JSON response
       const data = await response.json();
-      console.log('HII');
       console.log('Fetched total visits successfully:', data);
 
       // Assuming data contains the monthly visit statistics as an object
@@ -160,6 +161,7 @@ export default class LinkAuthentication extends Component {
       this.setState({
         totalVisits: totalVisits,
       });
+      console.log(totalVisits.monthly);
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -392,7 +394,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
-              <h3>{totalVisits}</h3>
+              <h3>{this.state.totalVisits.monthly}</h3>
               <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
             </div>
             <div className="icon">
