@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import { normalizeURL } from './LinkAuthentication';
 
 export default class LinkSafe extends Component {
   constructor(props) {
@@ -8,35 +9,91 @@ export default class LinkSafe extends Component {
       link: '',
       isSubmitted: false,
       websites: [
-        { id: 1, url: 'https://example.com', upvotes: 10, downvotes: 2 },
-        { id: 2, url: 'https://anotherexample.com', upvotes: 5, downvotes: 0 },
+        { id: 1, url: 'https://example.com', likes: 10, dislikes: 2 },
+        { id: 2, url: 'https://anotherexample.com', likes: 5, dislikes: 0 },
       ],
-      sortBy: 'upvotes', // Default sorting criteria
+      sortBy: 'likes', // Default sorting criteria
     };
   }
-
+  async fetchData(){
+    try {
+      // Make a GET request to the /api/likes-dislikes endpoint
+      const response = await fetch(`http://localhost:5050/api/all-likes`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Fetched ssl cert successfully:', data);
+      
+      this.setState({
+        websites: data
+      });
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+  componentDidMount() {
+    this.fetchData();
+  }
   handleInputChange = (event) => {
     this.setState({ link: event.target.value });
   };
 
-  handleUpvote = (id) => {
-    this.setState(prevState => ({
-      websites: prevState.websites.map(website =>
-        website.id === id
-          ? { ...website, upvotes: website.upvotes + 1 }
-          : website
-      )
-    }));
+  handleUpvote = async (url) => {
+    try {
+      // Make a POST request to the /api/upvote endpoint
+      const response = await fetch('http://localhost:5050/api/upvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: normalizeURL(url) }), // Send the URL in the body
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Upvote successful:', data);
+    } catch (error) {
+      console.error('Error during upvote:', error);
+    }
   };
 
-  handleDownvote = (id) => {
-    this.setState(prevState => ({
-      websites: prevState.websites.map(website =>
-        website.id === id
-          ? { ...website, downvotes: website.downvotes + 1 }
-          : website
-      )
-    }));
+  handleDownvote = async (url) => {
+    try {
+      // Make a POST request
+      const response = await fetch('http://localhost:5050/api/downvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: normalizeURL(url) }), // Send the URL in the body
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Upvote successful:', data);
+    } catch (error) {
+      console.error('Error during downvote:', error);
+    }
   };
 
   render() {
@@ -106,15 +163,15 @@ export default class LinkSafe extends Component {
                           <div className="d-flex align-items-center me-3">
                             <button
                               className="btn btn-success btn-sm me-2 mx-2"
-                              onClick={() => this.handleUpvote(website.id)}
+                              onClick={() => this.handleUpvote(website.url)}
                             >
-                              <i className="bi bi-caret-up" /> {website.upvotes}
+                              <i className="bi bi-caret-up" /> {website.likes}
                             </button>
                             <button
                               className="btn btn-danger btn-sm me-2"
-                              onClick={() => this.handleDownvote(website.id)}
+                              onClick={() => this.handleDownvote(website.url)}
                             >
-                              <i className="bi bi-caret-down" /> {website.downvotes}
+                              <i className="bi bi-caret-down" /> {website.dislikes}
                             </button>
                           </div>
                         </div>

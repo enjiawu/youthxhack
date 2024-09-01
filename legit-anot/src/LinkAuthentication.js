@@ -1,7 +1,7 @@
 import React, { Component,useState } from 'react'
 import { checkWebsiteSafe } from './services/googleSafeBrowsingService';
 
-function normalizeURL(url) {
+export function normalizeURL(url) {
   // Remove leading/trailing whitespace
   url = url.trim();
 
