@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { checkWebsiteSafe } from './services/googleSafeBrowsingService';
 
 function normalizeURL(url) {
   // Remove leading/trailing whitespace
@@ -13,6 +14,26 @@ function normalizeURL(url) {
   url = url.replace(/^https:\/\/(?:www\.)?/, 'https://www.');
 
   return url;
+}
+
+function SafeBrowsingChecker() {
+  const [url, setUrl] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCheck = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await checkGoogleSafeBrowsing(url);
+      setResult(data);
+    } catch (error) {
+      setError('Failed to check URL safety');
+    } finally {
+      setLoading(false);
+    }
+  };
 }
 
 export default class LinkAuthentication extends Component {

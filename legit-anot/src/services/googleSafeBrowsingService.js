@@ -1,4 +1,3 @@
-// googleSafeBrowsingService.js
 const axios = require('axios');
 
 const API_KEY = 'AIzaSyByeLBjadSQnJ7AdU5SIcV7ZBKZwRu0eCk';
@@ -18,6 +17,15 @@ export const checkWebsiteSafe = async (url) => {
         threatEntries: [{ url }],
       },
     });
+
+    // Check if response.data is empty
+    if (Object.keys(response.data).length === 0) {
+      console.log('No threats found.');
+      return 'No threats found';
+    }
+
+    // Handle response data here
+    console.log('Threats found:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error checking website safety:', error);
