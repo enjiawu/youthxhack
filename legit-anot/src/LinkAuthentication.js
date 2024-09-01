@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export function normalizeURL(url) {
   // Remove leading/trailing whitespace
@@ -14,6 +15,36 @@ export function normalizeURL(url) {
 
   return url;
 }
+
+const GOOGLE_AI_API_KEY = 'AIzaSyDnPeu43l-sXIt2HQ5V0aoqqP8KcS-L98c';
+
+export async function analyzeUrl(url) {
+  const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = `based on these factors analyse the safety and legitimacy of this url, ${url}, give me a rating low/medium/high in terms of safety and legitimacy. only return a clear rating of ow medium or high for the overall rating. without any elaboration
+Domain Extension
+Domain Age
+Whois Information
+Professionalism of Content
+Contact Information
+HTTPS in URL
+Copyright and Privacy Policies
+Online Reviews
+Third-Party Certifications
+Social Media Presence
+SSL Certificate
+Payment Gateways
+Malware and Phishing Checks
+Domain Blacklist Checks
+Website Speed
+Suspicious Requests
+Intrusive Ads`;
+
+  const result = await model.generateContent(prompt);
+  console.log(result.response.text());
+}
+
 
 export default class LinkAuthentication extends Component {
   constructor(props) {
@@ -315,7 +346,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); }}
+                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
                   >
                     Check
                   </button>
