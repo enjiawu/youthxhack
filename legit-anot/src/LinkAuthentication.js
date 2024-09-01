@@ -1,5 +1,20 @@
 import React, { Component } from 'react'
 
+function normalizeURL(url) {
+  // Remove leading/trailing whitespace
+  url = url.trim();
+
+  // Add 'https://' if not present
+  if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+  }
+
+  // Remove 'www.' if it is not present, and add it
+  url = url.replace(/^https:\/\/(?:www\.)?/, 'https://www.');
+
+  return url;
+}
+
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -10,7 +25,12 @@ export default class LinkAuthentication extends Component {
 
   state = {
     link: '',
-    isSubmitted: false
+    isSubmitted: false,
+    isVoted: false,
+    totalVotes : 0,
+    communityRating: 0,
+    barColor: '#FF0000',
+    issuer: 'NA',
   };
 
   handleInputChange = (event) => {
@@ -21,11 +41,42 @@ export default class LinkAuthentication extends Component {
     this.setState({ isSubmitted: true });
     this.setState({ isVoted: false });
   };
+  
+  fetchSslCert = async (url) => {
+    url = normalizeURL(url);
+    try {
+      // Make a GET request to the /api/likes-dislikes endpoint
+      const response = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Fetched ssl cert successfully:', data);
+      console.log(data.issuer)
+
+      // Update the component's state with the fetched data
+      this.setState({
+        issuer: data.issuer.O,
+      });
+      console.log(data.issuer.O);
+    } catch (error) {
+      console.error('Error fetching ssl cert:', error);
+    }
+  }
 
   fetchLikesDislikes = async (url) => {
     try {
       // Make a GET request to the /api/likes-dislikes endpoint
-      const response = await fetch(`http://localhost:5050/api/likes-dislikes?url=${encodeURIComponent(url)}`, {
+      const response = await fetch(`http://localhost:5050/api/likes-dislikes?url=${encodeURIComponent(normalizeURL(url))}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +133,7 @@ export default class LinkAuthentication extends Component {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: url }), // Send the URL in the body
+        body: JSON.stringify({ url: normalizeURL(url) }), // Send the URL in the body
       });
 
       // Check if the response is ok (status code 200-299)
@@ -110,7 +161,7 @@ export default class LinkAuthentication extends Component {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: url }), // Send the URL in the body
+        body: JSON.stringify({ url: normalizeURL(url) }), // Send the URL in the body
       });
 
       // Check if the response is ok (status code 200-299)
@@ -179,7 +230,7 @@ export default class LinkAuthentication extends Component {
                     type="button" 
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
-                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); }}
+                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
                   >
                     Check
                   </button>
@@ -253,8 +304,8 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
             <div className="inner">
-              <h3 id="ssl-cert">yes</h3>
-              <p>SSL Certificate <i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
+              <h3 id="ssl-cert">{this.state.issuer}</h3>
+              <p>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-lock" />
