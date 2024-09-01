@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-function normalizeURL(url) {
+export function normalizeURL(url) {
   // Remove leading/trailing whitespace
   url = url.trim();
 
@@ -15,11 +16,46 @@ function normalizeURL(url) {
   return url;
 }
 
+const GOOGLE_AI_API_KEY = 'AIzaSyDnPeu43l-sXIt2HQ5V0aoqqP8KcS-L98c';
+
+export async function analyzeUrl(url) {
+  const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = `based on these factors analyse the safety and legitimacy of this url, ${url}, give me a rating low/medium/high in terms of safety and legitimacy. only return a clear rating of ow medium or high for the overall rating. without any elaboration
+Domain Extension
+Domain Age
+Whois Information
+Professionalism of Content
+Contact Information
+HTTPS in URL
+Copyright and Privacy Policies
+Online Reviews
+Third-Party Certifications
+Social Media Presence
+SSL Certificate
+Payment Gateways
+Malware and Phishing Checks
+Domain Blacklist Checks
+Website Speed
+Suspicious Requests
+Intrusive Ads`;
+
+  const result = await model.generateContent(prompt);
+  console.log(result.response.text());
+}
+
+
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
     this.state = {
         link: '',  // State to manage the input value
+        totalVisits:{},// initialize as empty object
+        visitDuration:{},
+        pagesPerVisit:{},
+        bounceRate:{},
+        error:null
     };
   }
 
@@ -31,6 +67,7 @@ export default class LinkAuthentication extends Component {
     communityRating: 0,
     barColor: '#FF0000',
     issuer: 'NA',
+    hasThreats: false,
   };
 
   handleInputChange = (event) => {
@@ -105,6 +142,106 @@ export default class LinkAuthentication extends Component {
       });
     } catch (error) {
       console.error('Error fetching likes/dislikes:', error);
+    }
+  };
+
+  fetchTotalVisit = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched total visits successfully:', data); // Debugging line
+
+      this.setState({
+        totalVisits: data,
+      });
+    } catch (error) {
+      console.error('Error fetching total visits:', error);
+    }
+  };
+
+  fetchVisitDuration = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched visit duration successfully:', data); // Debugging line
+
+      this.setState({
+        visitDuration: data,
+      });
+    } catch (error) {
+      console.error('Error fetching visit duration:', error);
+    }
+  }; 
+
+  fetchPagesPerVisit = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched pages per visit successfully:', data); // Debugging line
+
+      this.setState({
+        pagesPerVisit: data,
+      });
+    } catch (error) {
+      console.error('Error fetching visit duration:', error);
+    }
+  }; 
+
+  fetchBounceRate = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched bounce rate successfully:', data); // Debugging line
+
+      this.setState({
+        bounceRate: data,
+      });
+    } catch (error) {
+      console.error('Error fetching bounce rate:', error);
     }
   };
 
@@ -187,10 +324,65 @@ export default class LinkAuthentication extends Component {
     return 'bg-danger'; // Red for low rating
   };
 
-    render() {
-        const ratingClass = this.getRatingClass();
-        return (
-            <div>
+  hasThreats = () => {
+    this.setState({ hasThreats: true });
+  };
+  
+  clearThreats = () => {
+    this.setState({ hasThreats: false });
+  };
+  
+  fetchGoogleSafeBrowsing = async (url) => {
+    try {
+      const response = await fetch('http://localhost:5050/api/check-safe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: normalizeURL(url) }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Google Safe Browsing API response:', data);
+  
+      // Determine if threats are found or not
+      const hasThreats = data.hasThreats;
+      console.log('Threats found:', hasThreats);
+  
+      // Update the UI based on the response
+      if (hasThreats) {
+        this.hasThreats(); // Call to set state indicating threats
+      } else {
+        this.clearThreats(); // Call to set state indicating no threats
+      }
+    } catch (error) {
+      console.error('Error checking website safety:', error);
+      // Handle error state if needed
+      this.clearThreats(); // Optionally clear threats if an error occurs
+    }
+  };
+
+  // Function to format numbers
+  formatNumber = (num) => {
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1) + 'B';
+    } else if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    } else {
+      return num;
+    }
+  };
+
+  render() {
+      const ratingClass = this.getRatingClass();
+      return (
+          <div>
   <div className="content-wrapper">
     {/* Content Header (Page header) */}
     <div className="content-header">
@@ -233,7 +425,8 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
+                    onClick={() => { this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+
                   >
                     Check
                   </button>
@@ -335,7 +528,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
-              <h3>44</h3>
+              <h3>{this.formatNumber(this.state.totalVisits.monthly)}</h3>
               <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
             </div>
             <div className="icon">
@@ -348,7 +541,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
             <div className="inner">
-              <h3>65</h3>
+              <h3>{this.state.pagesPerVisit.monthly}</h3>
               <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
             </div>
             <div className="icon">
@@ -365,7 +558,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>80</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}</h3>
               <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
             </div>
             <div className="icon">
@@ -378,7 +571,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>120</h3>
+              <h3 style ={{color : 'white'}}>{this.state.bounceRate.monthly}</h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
@@ -402,13 +595,13 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#9b59b6' }}>
+          <div className="small-box" style={{ backgroundColor: '#fffff4' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>No</h3>
-              <p style ={{color : 'white'}}>Blacklists <i className="fas fa-info-circle info-icon" title="Check if link is a known malicious site"></i></p>
+              <h3 style ={{color : this.state.hasThreats ? 'darkred' : 'black'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
+              <p style ={{color : this.state.hasThreats ? 'darkred' : 'black'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
             </div>
             <div className="icon">
-              <i className="fas fa-ban" />
+              <i className={this.state.hasThreats ? 'fas fa-exclamation-triangle' : 'fas fa-ban'} />
             </div>
           </div>
         </div>
