@@ -23,6 +23,7 @@ export default class LinkAuthentication extends Component {
         totalVisits:{},// initialize as empty object
         visitDuration:{},
         pagesPerVisit:{},
+        bounceRate:{},
         error:null
     };
   }
@@ -138,7 +139,6 @@ export default class LinkAuthentication extends Component {
     }
   };
 
-  
   fetchVisitDuration = async (url) => {
     try {
       const normalizedUrl = encodeURIComponent(url);
@@ -188,6 +188,31 @@ export default class LinkAuthentication extends Component {
       console.error('Error fetching visit duration:', error);
     }
   }; 
+
+  fetchBounceRate = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched bounce rate successfully:', data); // Debugging line
+
+      this.setState({
+        bounceRate: data,
+      });
+    } catch (error) {
+      console.error('Error fetching bounce rate:', error);
+    }
+  };
 
   getBarColor() {
     const communityRating = this.state.communityRating;
@@ -356,7 +381,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); }}
+                    onClick={() => { this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); }}
 
                   >
                     Check
@@ -502,7 +527,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>120</h3>
+              <h3 style ={{color : 'white'}}>{this.state.bounceRate.monthly}</h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
