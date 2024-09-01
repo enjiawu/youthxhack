@@ -8,8 +8,25 @@ export default class Dashboard extends Component {
     };
   }
 
+  state = {
+    link: '',
+    isSubmitted: false
+  };
+
   handleInputChange = (event) => {
-      this.setState({ link: event.target.value });
+    this.setState({ link: event.target.value });
+  };
+
+  handleSubmit = () => {
+    this.setState({ isSubmitted: true });
+  };
+
+  handleUpvote = () => {
+    // Handle upvote logic
+  };
+
+  handleDownvote = () => {
+    // Handle downvote logic
   };
 
     render() {
@@ -39,111 +56,142 @@ export default class Dashboard extends Component {
         {/* Link Input Section */}
         <div className="row">
           <div className="col-12">
-              <div className="card">
-                  <div className="card-header">
-                      <h3 className="card-title">Enter a Link</h3>
-                  </div>
-                  <div className="card-body">
-                      <input 
-                          type="text" 
-                          className="form-control" 
-                          placeholder="Enter link here..." 
-                          value={this.state.link} 
-                          onChange={this.handleInputChange}
-                      />
-                  </div>
+            <div className="card">
+              <div className="card-header">
+                <h3 className="card-title">Check your link</h3>
               </div>
+              <div className="card-body">
+                <div className="d-flex">
+                  <input 
+                    type="text" 
+                    className="form-control me-2" 
+                    placeholder="Enter link here..." 
+                    value={this.state.link} 
+                    onChange={this.handleInputChange}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn btn-primary"
+                    style ={{marginLeft: "10px"}}
+                    onClick={this.handleSubmit}
+                  >
+                    Check
+                  </button>
+                </div>
+                {this.state.isSubmitted && (
+                <div className="mt-4 d-flex flex-column align-items-center">
+                  <p className="mb-1">Do you think this link is legit?</p>
+                  <div className="d-flex">
+                    <button 
+                      type="button" 
+                      className="btn btn-success btn-sm me-2"
+                      onClick={this.handleUpvote}
+                    >
+                      <i className="bi bi-caret-up" style={{ fontSize: '0.5rem' }}></i> Yes
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-danger btn-sm "
+                      onClick={this.handleDownvote}
+                      style = {{ marginLeft: "10px" }}
+                    >
+                      <i className="bi bi-caret-down" style={{ fontSize: '0.5rem'}}></i> No
+                    </button>
+                  </div>
+                </div>
+              )}
+              </div>
+            </div>
           </div>
       </div>
       {/* /.row */}
 
-     {/* Two rows with three boxes each */}
-    <div className="row">
-      <div className="col-lg-4 col-6">
-        {/* small box */}
-        <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
-          <div className="inner">
-            <h3 id="ssl-cert">yes</h3>
-            <p title="Indicates if the site has a valid SSL certificate">SSL Certificate</p>
-          </div>
-          <div className="icon">
-            <i className="fas fa-lock" />
-          </div>
-        </div>
-      </div>
-      {/* ./col */}
-      <div className="col-lg-4 col-6">
-        {/* small box */}
-        <div className="small-box" style={{ backgroundColor: '#28a745' }}>
-          <div className="inner">
-            <h3>53<sup style={{ fontSize: 20 }}>%</sup></h3>
-            <p title="Shows the percentage of checks performed for this link within our website">Checks</p>
-          </div>
-          <div className="icon">
-            <i className="fas fa-check-circle" />
+      {/* Two rows with three boxes each */}
+      <div className="row">
+        <div className="col-lg-4 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
+            <div className="inner">
+              <h3 id="ssl-cert">yes</h3>
+              <p>SSL Certificate <i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-lock" />
+            </div>
           </div>
         </div>
-      </div>
-      {/* ./col */}
-      <div className="col-lg-4 col-6">
-        {/* small box */}
-        <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
-          <div className="inner">
-            <h3>44</h3>
-            <p title="Number of times users have visited the site">Visits</p>
-          </div>
-          <div className="icon">
-            <i className="fas fa-eye" />
+        {/* ./col */}
+        <div className="col-lg-4 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#28a745' }}>
+            <div className="inner">
+              <h3>53<sup style={{ fontSize: 20 }}>%</sup></h3>
+              <p>Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-check-circle" />
+            </div>
           </div>
         </div>
+        {/* ./col */}
+        <div className="col-lg-4 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
+            <div className="inner">
+              <h3>44</h3>
+              <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-eye" />
+            </div>
+          </div>
+        </div>
+        {/* ./col */}
       </div>
-      {/* ./col */}
-    </div>
-    {/* /.row */}
+      {/* /.row */}
 
-    <div className="row">
-      <div className="col-lg-4 col-6">
-        {/* small box */}
-        <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
-          <div className="inner">
-            <h3>65</h3>
-            <p title="Average number of pages viewed per visit">Pages per visit</p>
-          </div>
-          <div className="icon">
-            <i className="fas fa-file-alt" />
-          </div>
-        </div>
-      </div>
-      {/* ./col */}
-      <div className="col-lg-4 col-6">
-        {/* small box */}
-        <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
-          <div className="inner">
-            <h3>80</h3>
-            <p title="Average duration of a single visit to the site, in seconds">Average Visit Duration</p>
-          </div>
-          <div className="icon">
-            <i className="fas fa-clock" />
+      <div className="row">
+        <div className="col-lg-4 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
+            <div className="inner">
+              <h3 style ={{color : 'white'}}>65</h3>
+              <p style ={{color : 'white'}}>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-file-alt" />
+            </div>
           </div>
         </div>
-      </div>
-      {/* ./col */}
-      <div className="col-lg-4 col-6">
-        {/* small box */}
-        <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
-          <div className="inner">
-            <h3>120</h3>
-            <p title="Percentage of visitors who leave the site after viewing only one page">Bounce Rate</p>
-          </div>
-          <div className="icon">
-            <i className="fas fa-percent" />
+        {/* ./col */}
+        <div className="col-lg-4 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
+            <div className="inner">
+              <h3 style ={{color : 'white'}}>80</h3>
+              <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-clock" />
+            </div>
           </div>
         </div>
+        {/* ./col */}
+        <div className="col-lg-4 col-6">
+          {/* small box */}
+          <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
+            <div className="inner">
+              <h3 style ={{color : 'white'}}>120</h3>
+              <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
+            </div>
+            <div className="icon">
+              <i className="fas fa-percent" />
+            </div>
+          </div>
+        </div>
+        {/* ./col */}
       </div>
-      {/* ./col */}
-    </div>
-    {/* /.row */}
-
+      {/* /.row */}
       
         {/* Main row */}
         <div className="row">
