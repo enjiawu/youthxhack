@@ -34,12 +34,14 @@ export default class LinkAuthentication extends Component {
   };
 
   handleInputChange = (event) => {
-    this.setState({ link: event.target.value });
+    this.setState({ link: event.target.value }); // Update the link state on input change
   };
 
   handleSubmit = () => {
-    this.setState({ isSubmitted: true });
-    this.setState({ isVoted: false });
+    this.setState({
+      isSubmitted: true,
+      isVoted: false,
+    });
   };
   
   fetchSslCert = async (url) => {
@@ -230,6 +232,7 @@ export default class LinkAuthentication extends Component {
                     type="button" 
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
+                    disabled={!this.state.link} // Disable button if link state is empty
                     onClick={() => { this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); }}
                   >
                     Check
@@ -298,6 +301,8 @@ export default class LinkAuthentication extends Component {
       </div>
       {/* /.row */}
 
+      {this.state.isSubmitted && (
+        <div>
       {/* Two rows with three boxes each */}
       <div className="row">
         <div className="col-lg-3 col-6">
@@ -409,6 +414,7 @@ export default class LinkAuthentication extends Component {
         </div>
         {/* ./col */}
       </div>
+      </div>)}
       {/* /.row */}
       
         {/* Main row */}
