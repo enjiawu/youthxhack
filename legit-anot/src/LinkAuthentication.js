@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { checkWebsiteSafe } from './services/googleSafeBrowsingService';
 
 function normalizeURL(url) {
   // Remove leading/trailing whitespace
@@ -13,6 +14,26 @@ function normalizeURL(url) {
   url = url.replace(/^https:\/\/(?:www\.)?/, 'https://www.');
 
   return url;
+}
+
+function SafeBrowsingChecker() {
+  const [url, setUrl] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCheck = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await checkGoogleSafeBrowsing(url);
+      setResult(data);
+    } catch (error) {
+      setError('Failed to check URL safety');
+    } finally {
+      setLoading(false);
+    }
+  };
 }
 
 export default class LinkAuthentication extends Component {
@@ -34,12 +55,14 @@ export default class LinkAuthentication extends Component {
   };
 
   handleInputChange = (event) => {
-    this.setState({ link: event.target.value });
+    this.setState({ link: event.target.value }); // Update the link state on input change
   };
 
   handleSubmit = () => {
-    this.setState({ isSubmitted: true });
-    this.setState({ isVoted: false });
+    this.setState({
+      isSubmitted: true,
+      isVoted: false,
+    });
   };
   
   fetchSslCert = async (url) => {
@@ -335,6 +358,8 @@ export default class LinkAuthentication extends Component {
       </div>
       {/* /.row */}
 
+      {this.state.isSubmitted && (
+        <div>
       {/* Two rows with three boxes each */}
       <div className="row">
         <div className="col-lg-3 col-6">
@@ -446,6 +471,7 @@ export default class LinkAuthentication extends Component {
         </div>
         {/* ./col */}
       </div>
+      </div>)}
       {/* /.row */}
       
         {/* Main row */}
