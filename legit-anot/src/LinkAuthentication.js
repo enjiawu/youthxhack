@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-function normalizeURL(url) {
+export function normalizeURL(url) {
   // Remove leading/trailing whitespace
   url = url.trim();
 
@@ -20,6 +20,8 @@ export default class LinkAuthentication extends Component {
     super(props);
     this.state = {
         link: '',  // State to manage the input value
+        totalVisits:{},// initialize as empty object
+        error:null
     };
   }
 
@@ -108,6 +110,43 @@ export default class LinkAuthentication extends Component {
       console.error('Error fetching likes/dislikes:', error);
     }
   };
+
+  fetchTotalVisit = async (url) => {
+    try {
+      // Normalize the URL (if necessary) before making the request
+      const normalizedUrl = encodeURIComponent(url);
+
+      // Make a GET request to the /getTrafficObject/:url endpoint
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(normalizeURL(url))}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse and handle the JSON response
+      const data = await response.json();
+      console.log('Fetched total visits successfully:', data);
+
+      // Assuming data contains the monthly visit statistics as an object
+      const totalVisits = data; // Adjust this based on actual data structure
+
+      // Update the state or perform actions with fetched data
+      // Assuming you're using React or similar for state management
+      this.setState({
+        totalVisits: totalVisits,
+      });
+      console.log(totalVisits.monthly);
+    } catch (error) {
+      console.error('Error fetching total visits:', error);
+    }
+};
+
 
   getBarColor() {
     const communityRating = this.state.communityRating;
@@ -378,7 +417,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
             <div className="inner">
-              <h3>44</h3>
+              <h3>{this.state.totalVisits.monthly}</h3>
               <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
             </div>
             <div className="icon">
