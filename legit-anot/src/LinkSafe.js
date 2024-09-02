@@ -201,15 +201,16 @@ export default class LinkSafe extends Component {
                           </div>
                         </div>
                         <div className="card-footer text-center">
-                          <Link
-                            to={{
-                              pathname: '/',
-                              state: { link: website.url }
-                            }}
-                            className="btn btn-primary btn-sm px-5"
-                          >
-                            See More
-                          </Link>
+                        <Link
+                          to={{
+                            pathname: '/',
+                            state: { link: website.url }
+                          }}
+                          className="btn btn-primary btn-sm px-5"
+                        >
+                          See More
+                        </Link>
+
                         </div>
                       </div>
                     </div>
