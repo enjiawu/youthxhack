@@ -8,28 +8,25 @@ import LinkAuthentication from './LinkAuthentication';
 import LinkSafe from './LinkSafe';
 import Info from './Info';
 import PrivacyNotice from './PrivacyNotice';
-import { IpProvider } from './IpContext';
 
 function App() {
   return (
-    <IpProvider>
-      <Router>
+    <Router>
+      <div>
+        <Header />
+        <Menu />
+        <PrivacyNotice />
         <div>
-          <Header />
-          <Menu />
-          <PrivacyNotice />
-          <div>
-            <Routes>
-              <Route path="/" element={<LinkAuthentication />} />
-              {/* Add more routes as needed */}
-              <Route path="/link-safe" element={<LinkSafe />} />
-              <Route path="/info" element={<Info />} />
-            </Routes>
-          </div>
-          <Footer />
+          <Routes>
+            <Route path="/" element={<LinkAuthentication />} />
+            {/* Add more routes as needed */}
+            <Route path="/link-safe" element={<LinkSafe />} />
+            <Route path="/info" element={<Info />} />
+          </Routes>
         </div>
-      </Router>
-    </IpProvider>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
