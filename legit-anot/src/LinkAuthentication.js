@@ -144,7 +144,7 @@ export default class LinkAuthentication extends Component {
 
   fetchTotalVisit = async (url) => {
     try {
-      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(normalizeURL(url))}`, {
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${url}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -173,14 +173,12 @@ export default class LinkAuthentication extends Component {
 
   fetchVisitDuration = async (url) => {
     try {
-      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${encodeURIComponent(normalizeURL(url))}`, {
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${url}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Fetched visit duration successfully:', response); // Debugging line
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -214,7 +212,7 @@ export default class LinkAuthentication extends Component {
 
   fetchPagesPerVisit = async (url) => {
     try {
-      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${encodeURIComponent(normalizeURL(url))}`, {
+      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${url}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +241,7 @@ export default class LinkAuthentication extends Component {
 
   fetchBounceRate = async (url) => {
     try {
-      const response = await fetch(`http://localhost:5050/getBounceRate?url=${encodeURIComponent(normalizeURL(url))}`, {
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${url}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -255,6 +253,7 @@ export default class LinkAuthentication extends Component {
       }
 
       const data = await response.json();
+      console.log('Fetched bounce rate successfully:', data); // Debugging line
 
       this.setState({
         bounceRate: data,
