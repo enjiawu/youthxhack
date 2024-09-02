@@ -122,6 +122,17 @@ async function fetchBounceRate(database,targetUrl){
     }
 }
 
+async function fetchOriginOfUsers(database,targetUrl){
+    try{
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.originOfUsers : null;
+    }catch(error){
+        console.error(err);
+        throw new Error('Error fetching origin of users');
+    }
+}
+
 app.get('/api/likes-dislikes', async (req, res) => {
     const targetUrl = req.query.url;
     if (!targetUrl) {
@@ -191,6 +202,21 @@ app.get("/getBounceRate", async(req,res) =>{
     try {
         const { db, client } = await createConnection('canITrustYou'); 
         const result = await fetchBounceRate(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
+
+app.get("/getOriginOfUsers", async(req,res) =>{
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchOriginOfUsers(db,targetUrl);
         await client.close();
         res.json(result);
     } catch (error) {

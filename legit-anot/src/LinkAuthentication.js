@@ -25,6 +25,7 @@ export default class LinkAuthentication extends Component {
         visitDuration:{},
         pagesPerVisit:{},
         bounceRate:{},
+        originOfUsers:{},
         error:null
     };
   }
@@ -213,6 +214,31 @@ export default class LinkAuthentication extends Component {
       });
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
+    }
+  };
+
+  fetchOriginOfUsers = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getOriginOfUsers?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Fetched origin of users successfully:', data); // Debugging line
+
+      this.setState({
+        originOfUsers: data,
+      });
+    } catch (error) {
+      console.error('Error fetching origin of users:', error);
     }
   };
 
@@ -426,7 +452,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+                    onClick={() => { this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
 
                   >
                     Check
@@ -628,7 +654,7 @@ export default class LinkAuthentication extends Component {
               <div className="card-header">
                 <h3 className="card-title">
                   <i className="fas fa-chart-pie mr-1" />
-                  Sales
+                  Origin of Users
                 </h3>
                 <div className="card-tools">
                   <ul className="nav nav-pills ml-auto">
