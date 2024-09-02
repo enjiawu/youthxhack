@@ -8,11 +8,8 @@ export default class LinkSafe extends Component {
     this.state = {
       link: '',
       isSubmitted: false,
-      websites: [
-        { id: 1, url: 'https://example.com', likes: 10, dislikes: 2 },
-        { id: 2, url: 'https://anotherexample.com', likes: 5, dislikes: 0 },
-      ],
       sortBy: 'likes', // Default sorting criteria
+      websites: [], // Initialize as an empty array
     };
   }
   async fetchData(){
@@ -42,7 +39,8 @@ export default class LinkSafe extends Component {
     }
   }
   componentDidMount() {
-    this.fetchData();
+    //this.fetchData();
+    this.fetchURLs();
   }
   handleInputChange = (event) => {
     this.setState({ link: event.target.value });
@@ -96,6 +94,34 @@ export default class LinkSafe extends Component {
     }
   };
 
+  async fetchURLs() {
+    try {
+      const response = await fetch('http://localhost:5050/getURLs');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      console.log('Fetched URLs successfully:', data);
+
+      // Map the fetched data into the desired format
+      const websites = data.map((item,index) => ({
+        id: index + 1, // Generate a unique ID (e.g., sequential)
+        url: item.url,
+        likes: item.likes,
+        dislikes: item.dislikes,
+      }));
+  
+      this.setState({
+        websites: websites,
+      });
+    } catch (error) {
+      console.error('Error fetching URLs:', error);
+    }
+  }
+  
+
+ 
+
   render() {
     const { link, websites, sortBy } = this.state;
 
@@ -106,7 +132,6 @@ export default class LinkSafe extends Component {
 
     // Sort websites based on the selected sortBy criteria
     const sortedWebsites = [...filteredWebsites].sort((a, b) => b[sortBy] - a[sortBy]);
-
     return (
       <div>
         <div className="content-wrapper">
@@ -132,7 +157,7 @@ export default class LinkSafe extends Component {
             <div className="container-fluid">
               {/* Search and Sort Section */}
               <div className="row mb-3">
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <div className="input-group">
                     <input
                       type="text"
@@ -176,15 +201,16 @@ export default class LinkSafe extends Component {
                           </div>
                         </div>
                         <div className="card-footer text-center">
-                          <Link
-                            to={{
-                              pathname: '/',
-                              state: { link: website.url }
-                            }}
-                            className="btn btn-primary btn-sm px-5"
-                          >
-                            See More
-                          </Link>
+                        <Link
+                          to={{
+                            pathname: '/',
+                            state: { link: website.url }
+                          }}
+                          className="btn btn-primary btn-sm px-5"
+                        >
+                          See More
+                        </Link>
+
                         </div>
                       </div>
                     </div>

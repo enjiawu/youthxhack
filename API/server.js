@@ -146,6 +146,37 @@ async function fetchBounceRate(database,targetUrl){
     }
 }
 
+async function fetchOriginOfUsers(database,targetUrl){
+    try{
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+        return result ? result.originOfUsers : null;
+    }catch(error){
+        console.error(err);
+        throw new Error('Error fetching origin of users');
+    }
+}
+
+async function fetchAllURLs(database) {
+    try {
+        // Access the collection
+        const collection = database.collection('likes');
+
+        // Find all documents
+        const results = await collection.find({}).toArray();
+
+        // Extract the URL from each document
+        const urls = results.map(result => result.url);
+        console.log(results);
+        return results;
+    } catch (error) {
+        console.error('Error fetching URLs:', error);
+        throw new Error('Error fetching URLs from database');
+    }
+}
+
+
+
 app.get('/api/likes-dislikes', async (req, res) => {
     const targetUrl = req.query.url;
     if (!targetUrl) {
@@ -181,7 +212,6 @@ app.get("/getVisitDuration", async(req,res) =>{
     if (!targetUrl) {
         return res.status(400).json({ error: 'URL parameter is required' });
     }
-    console.log('Target URL:', targetUrl); // Check what URL is being used
     try {
         const { db, client } = await createConnection('canITrustYou'); 
         const result = await fetchVisitDuration(db,targetUrl);
@@ -215,6 +245,32 @@ app.get("/getBounceRate", async(req,res) =>{
     try {
         const { db, client } = await createConnection('canITrustYou'); 
         const result = await fetchBounceRate(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
+
+app.get("/getOriginOfUsers", async(req,res) =>{
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchOriginOfUsers(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
+
+app.get("/getURLs", async(req,res) =>{
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchAllURLs(db);
         await client.close();
         res.json(result);
     } catch (error) {
@@ -345,6 +401,24 @@ app.post('/api/ssl-data', async (req, res) => {
     }
 });
 
+async function checkIfUrlIsBlocked(url) {
+    url = normalizeURL(url);
+    console.log("URL CHECKED ", url);
+    // Example logic
+    const blockedUrls = ['https://www.malicious.com/', 'https://www.phishing.com/'];
+    return blockedUrls.includes(url);
+}
+
+app.get('/api/check-url', async (req, res) => {
+    const { url } = req.query;
+    // Perform your logic to determine if the URL is safe
+    // For example, you can check it against a list of unsafe URLs in your database
+    const isBlocked = await checkIfUrlIsBlocked(url);
+    console.log("IS IT BLOCKED? ", isBlocked);
+
+    res.json({ block: isBlocked });
+});
+
 const GOOGLE_SAFE_API_KEY = 'AIzaSyByeLBjadSQnJ7AdU5SIcV7ZBKZwRu0eCk';
 const GOOGLE_SAFE_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_SAFE_API_KEY}`;
 
@@ -410,6 +484,76 @@ app.get('/api/ip-address', (req, res) => {
         res.json({ ip: req.ipAddress });
     } else {
         res.status(404).json({ error: 'IP address not found' });
+    }
+});
+
+async function checkedData(database, targetUrl, ipAddress) {
+    try {
+        const collection = database.collection('traffic');
+        
+        // Calculate the average number of checks across all URLs
+        const allUrls = await collection.find({}).toArray();
+        const totalChecks = allUrls.reduce((acc, item) => acc + item.checks.length, 0);
+        const averageChecks = allUrls.length > 0 ? totalChecks / allUrls.length : 0;
+
+        const result = await collection.findOne({ url: targetUrl });
+
+        if (result) {
+            const alreadyChecked = result.checks.includes(ipAddress);
+            const checksCount = result.checks.length;
+
+            if (alreadyChecked) {
+                // URL already checked by this IP address
+                return { message: 'URL already checked by this IP address', checksCount, averageChecks };
+            } else {
+                // Add the new IP address to the checks array
+                await collection.updateOne(
+                    { url: targetUrl },
+                    { $addToSet: { checks: ipAddress } }
+                );
+
+                return { message: 'URL added to checks', checksCount: checksCount + 1, averageChecks };
+            }
+        } else {
+            // If the URL is not found, return message and averageChecks
+            return { message: 'URL not found in the database', checksCount: 0, averageChecks };
+        }
+    } catch (error) {
+        console.error('Error in checkedData function:', error);
+        throw new Error('Error checking URL');
+    }
+}
+
+app.get('/api/checked', async (req, res) => {
+    const { url } = req.query;
+    const ipAddress = req.ip;  // Get the IP address
+
+    console.log('URL:', url); // Debugging line
+    console.log('IP Address:', ipAddress); // Debugging line
+
+    if (!url || !ipAddress) {
+        return res.status(400).json({ error: 'URL parameter and ipAddress are needed' });
+    }
+
+    try {
+        const { db, client } = await createConnection('canITrustYou');
+        const checkStatus = await checkedData(db, url, ipAddress);
+        await client.close();
+
+        if (checkStatus.message === 'URL not found in the database') {
+            res.status(404).json({ error: checkStatus.message, averageChecks: checkStatus.averageChecks });
+        } else {
+            const alreadyChecked = checkStatus.message === 'URL already checked by this IP address';
+            res.json({ 
+                checked: alreadyChecked, 
+                message: checkStatus.message, 
+                checkCount: checkStatus.checksCount,
+                averageChecks: checkStatus.averageChecks
+            });
+        }
+    } catch (error) {
+        console.error('Error in /api/checked route:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
