@@ -7,7 +7,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/enjiawu/youthxhack">
-    <img src="logo.png" alt="Logo" width="80" height="80">
+    <img src="banner.jpg" alt="Logo" width="400" height="auto">
   </a>
 
   <h3 align="center">Legit anot?</h3>
