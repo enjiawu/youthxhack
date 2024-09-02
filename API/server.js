@@ -413,6 +413,49 @@ app.get('/api/ip-address', (req, res) => {
     }
 });
 
+async function checkedData(database, targetUrl, ipAddress) {
+    try {
+        const collection = database.collection('traffic');
+        const result = await collection.findOne({ url: targetUrl });
+
+        if (result && result.checks.includes(ipAddress)) {
+            return 'URL already checked by this IP address';
+        } else {
+            await collection.updateOne(
+                { url: targetUrl },
+                { $addToSet: { checks: ipAddress } },
+                { upsert: true }
+            );
+            return 'URL added to checks';
+        }
+    } catch (error) {
+        console.error('Error checking URL:', error);
+        throw new Error('Error checking URL');
+    }
+}
+
+// Check if the user already checked for the URL
+app.get('/api/checked', async (req, res) => {
+    const { url } = req.query;
+    const ipAddress = req.ipAddress;
+
+    if (!url) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+
+    try {
+        const { db, client } = await createConnection('canITrustYou');  // Assuming this function establishes and returns a DB connection
+        const checkStatus = await checkedData(db, url, ipAddress);
+        await client.close();
+
+        const alreadyChecked = checkStatus === 'URL already checked by this IP address';
+        res.json({ checked: alreadyChecked, message: checkStatus });
+    } catch (error) {
+        console.error('Error in /api/checked route:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Start the server
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
