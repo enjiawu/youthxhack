@@ -69,14 +69,12 @@ export default class LinkAuthentication extends Component {
             }
         });
         const data = await response1.json();
-
       // Update the component's state with the fetched data
       this.setState({
         issuer: data.issuer.O,
         valid_from: data.valid_from.slice(0, 6) + data.valid_from.slice(15, 20),
         valid_to: data.valid_to.slice(0, 6) + data.valid_to.slice(15, 20)
       });
-
       const trustedProviders = [
         'Amazon',
         'DigiCert',
@@ -819,8 +817,8 @@ export default class LinkAuthentication extends Component {
           <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
             <div className="inner">
               <h4 id="ssl-cert">{this.state.issuer}</h4>
-              <p>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
               <h8 id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
+              <p>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-lock" />
