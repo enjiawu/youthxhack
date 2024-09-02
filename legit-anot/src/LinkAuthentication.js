@@ -39,23 +39,12 @@ export default class LinkAuthentication extends Component {
         hasThreats: false,
         safetyRating: 'Unknown',
         overallRating: 0,
+        checks: 0,
+        valid_from: 'NA',
+        valid_to: 'NA'
     };
     this.chartInstance = null; // Add chart instance reference
   }
-
-  state = {
-    link: '',
-    isSubmitted: false,
-    isVoted: false,
-    totalVotes : 0,
-    communityRating: 0,
-    barColor: '#FF0000',
-    issuer: 'NA',
-    valid_from: 'NA',
-    valid_to: 'NA',
-    hasThreats: false,
-    safetyRating: 'Unknown',
-  };
 
   handleInputChange = (event) => {
     this.setState({ link: event.target.value }); // Update the link state on input change
@@ -221,7 +210,7 @@ export default class LinkAuthentication extends Component {
   fetchTotalVisit = async (url) => {
     url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -262,7 +251,7 @@ export default class LinkAuthentication extends Component {
   fetchVisitDuration = async (url) => {
     url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -301,7 +290,7 @@ export default class LinkAuthentication extends Component {
   fetchPagesPerVisit = async (url) => {
     url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -342,7 +331,7 @@ export default class LinkAuthentication extends Component {
   fetchBounceRate = async (url) => {
     url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getBounceRate?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -668,19 +657,26 @@ export default class LinkAuthentication extends Component {
 
   fetchChecks = async (url) => {
     try {
-      const response = await fetch(`http://localhost:5050/api/check-link?url=${url}`, {
-        method: 'POST',
+      const response = await fetch(`http://localhost:5050/api/checked?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: normalizeURL(url) }),
       });
-    }
-    catch (error) {
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Fetched checks successfully:', data);
+  
+      // Assuming 'checks' is the number of times the URL has been checked
+      this.setState({ checks: (data.checkCount/data.averageChecks) * 100 });
+    } catch (error) {
       console.error('Error checking website safety:', error);
     }
   };
-
 
   // Function to format numbers
   formatNumber = (num) => {
@@ -745,7 +741,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+                    onClick={() => { this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); this.fetchChecks(this.state.link)}}
 
                   >
                     Check
@@ -836,8 +832,8 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#28a745' }}>
             <div className="inner">
-              <h3>53<sup style={{ fontSize: 20 }}>%</sup></h3>
-              <p>Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
+              <h3>{this.state.checks.toFixed(2)}<sup style={{ fontSize: 20 }}>%</sup></h3>
+              <p>User Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-check-circle" />
