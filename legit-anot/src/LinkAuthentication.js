@@ -584,17 +584,17 @@ export default class LinkAuthentication extends Component {
         <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: 
-          this.state.safetyRating == "High" ? '#28a745' : 
-          this.state.safetyRating == "Medium!" ? 'yellow' : 
-          this.state.safetyRating == "Low!!" ? 'red' : 
-          this.state.safetyRating == "Unknown" ? 'gray' : 
+          this.state.safetyRating === "High" ? '#28a745' : 
+          this.state.safetyRating === "Medium!" ? 'yellow' : 
+          this.state.safetyRating === "Low!!" ? 'red' : 
+          this.state.safetyRating === "Unknown" ? 'gray' : 
           '#6c757d' }}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.state.safetyRating}</h3>
-              <p style ={{color : 'white'}}>AI Safety Rating <i className="fas fa-info-circle info-icon" title = {this.state.safetyRating == "High" ? 'According to AI evaluation, this link is safe and legitimate' : 
-              this.state.safetyRating == "Medium!" ? 'According to AI evaluation, this link is neither safe nor dangerous' : 
-              this.state.safetyRating == "Low!!" ? 'According to AI evaluation, this link is dangerous and illegitimate' : 
-              this.state.safetyRating == "Unknown" ? 'gray' : 'AI was not able to evaluate this link'}></i></p>
+              <p style ={{color : 'white'}}>AI Safety Rating <i className="fas fa-info-circle info-icon" title = {this.state.safetyRating === "High" ? 'According to AI evaluation, this link is safe and legitimate' : 
+              this.state.safetyRating === "Medium!" ? 'According to AI evaluation, this link is neither safe nor dangerous' : 
+              this.state.safetyRating === "Low!!" ? 'According to AI evaluation, this link is dangerous and illegitimate' : 
+              this.state.safetyRating === "Unknown" ? 'gray' : 'AI was not able to evaluate this link'}></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-robot" />
