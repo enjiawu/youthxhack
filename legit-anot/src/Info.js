@@ -95,13 +95,17 @@ const Info = () => {
       <h2>APIs We Use</h2>
       <ul>
         <li>Google Safe Search</li>
+        <li>Gemini AI</li>
         <li>SimilarWeb (Future incorporation)</li>
       </ul>
 
       <h2>References</h2>
       <ul>
         <li>
-          AdminLTE. GitHub. Available at: <a href="https://github.com/ColorlibHQ/AdminLTE" target="_blank" rel="noopener noreferrer">https://github.com/ColorlibHQ/AdminLTE</a>. (Accessed: 2 September 2024).
+          AdminLTE. (n.d.) GitHub. Available at: <a href="https://github.com/ColorlibHQ/AdminLTE" target="_blank" rel="noopener noreferrer">https://github.com/ColorlibHQ/AdminLTE</a> (Accessed: 2 September 2024).
+        </li>
+        <li>
+          SimilarWeb. (n.d.) Digital Suite. Available at: <a href="https://pro.similarweb.com/#/digitalsuite/home" target="_blank" rel="noopener noreferrer">https://pro.similarweb.com/#/digitalsuite/home</a> (Accessed: 2 September 2024).
         </li>
       </ul>
     </div>
