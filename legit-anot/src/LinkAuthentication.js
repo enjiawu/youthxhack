@@ -8,14 +8,17 @@ export function normalizeURL(url) {
 
   // Add 'https://' if not present
   if (!/^https?:\/\//i.test(url)) {
-      url = `https://${url}`;
+    url = `https://${url}`;
   }
 
-  // Remove 'www.' if it is not present, and add it
-  url = url.replace(/^https:\/\/(?:www\.)?/, 'https://www.');
+  // Ensure 'www.' is present if it's a standard web domain
+  if (!/^https?:\/\/www\./i.test(url)) {
+    url = url.replace(/^https?:\/\//i, 'https://www.');
+  }
 
   return url;
 }
+
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -214,7 +217,8 @@ export default class LinkAuthentication extends Component {
 
   fetchTotalVisit = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
+      const normalizedUrl = normalizeURL(url);
+      console.log(normalizeURL);
       const response = await fetch(`http://localhost:5050/getTrafficObject?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -255,7 +259,7 @@ export default class LinkAuthentication extends Component {
 
   fetchVisitDuration = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
+      const normalizedUrl = normalizeURL(url);
       const response = await fetch(`http://localhost:5050/getVisitDuration?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -294,7 +298,7 @@ export default class LinkAuthentication extends Component {
 
   fetchPagesPerVisit = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
+      const normalizedUrl = normalizeURL(url);
       const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -335,7 +339,7 @@ export default class LinkAuthentication extends Component {
 
   fetchBounceRate = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
+      const normalizedUrl = normalizeURL(url);
       const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
