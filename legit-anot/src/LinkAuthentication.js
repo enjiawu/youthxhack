@@ -876,7 +876,11 @@ export default class LinkAuthentication extends Component {
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}<sup style={{ fontSize: 20 }}>mins</sup></h3>
-              <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in minutes"></i></p>
+              <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title={
+                this.state.bounceRate.monthly <= 75
+                  ? 'Bounce rate is low, indicating a generally positive user experience. This website is likely safe.'
+                  : 'Bounce rate is high, which could suggest potential issues with the site. Proceed with caution as it may be potentially dangerous.'
+              }></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-clock" />
@@ -889,7 +893,14 @@ export default class LinkAuthentication extends Component {
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}<sup style={{ fontSize: 20 }}>%</sup></h3>
-              <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
+              <p style ={{color : 'white'}}>Bounce Rate <i
+              className="fas fa-info-circle info-icon"
+              title={
+                this.state.bounceRate.monthly <= 75
+                  ? 'Bounce rate is low, indicating a generally positive user experience. This website is likely safe.'
+                  : 'Bounce rate is high, which could suggest potential issues with the site. Proceed with caution as it may be potentially dangerous.'
+              }
+            ></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-percent" />
