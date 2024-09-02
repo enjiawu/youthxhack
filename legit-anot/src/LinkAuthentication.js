@@ -666,6 +666,22 @@ export default class LinkAuthentication extends Component {
     }
   }
 
+  fetchChecks = async (url) => {
+    try {
+      const response = await fetch(`http://localhost:5050/api/check-link?url=${url}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: normalizeURL(url) }),
+      });
+    }
+    catch (error) {
+      console.error('Error checking website safety:', error);
+    }
+  };
+
+
   // Function to format numbers
   formatNumber = (num) => {
     if (num == undefined){
@@ -863,8 +879,8 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}</h3>
-              <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}<sup style={{ fontSize: 20 }}>mins</sup></h3>
+              <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in minutes"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-clock" />
@@ -876,7 +892,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}<sup style={{ fontSize: 20 }}>%</sup></h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
