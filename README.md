@@ -99,20 +99,17 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
 * npm
   ```sh
-  npm install npm@latest -g
+  npm install
   ```
 
 ### Installation
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
-
-1. Get a free API Key at [https://example.com](https://example.com)
+1. Get a free API Key at [Gemini AI](https://aistudio.google.com/app/apikey?_gl=1*mw1mhv*_ga*MTg2MjExNjU4OC4xNzI1MTY3NzQ0*_ga_P1DBVKWT6V*MTcyNTI4MTQ3Ni40LjEuMTcyNTI4MTQ5MS40NS4wLjQzODYyMDk2MA..) and [Google Safe Browsing](https://developers.google.com/safe-browsing/v4/lookup-api)
 2. Clone the repo
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/enjiawu/youthxhack.git 
    ```
 3. Install NPM packages
    ```sh
@@ -126,6 +123,7 @@ _Below is an example of how you can instruct your audience on installing and set
    ```sh
    git remote set-url origin github_username/repo_name
    git remote -v # confirm the changes
+6. Change directory to API 
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -143,37 +141,6 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 
 
-<!-- ROADMAP -->
-## Roadmap
-
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
-
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 <!-- LICENSE -->
 ## License
 
@@ -186,16 +153,8 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
+* [GitHub AdminLTE](https://github.com/ColorlibHQ/AdminLTE)
+* [SimilarWeb Digital Suite](https://pro.similarweb.com/#/digitalsuite/home)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
