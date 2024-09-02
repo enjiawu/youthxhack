@@ -437,14 +437,17 @@ async function checkedData(database, targetUrl, ipAddress) {
 // Check if the user already checked for the URL
 app.get('/api/checked', async (req, res) => {
     const { url } = req.query;
-    const ipAddress = req.ipAddress;
+    const {ipAddress} = req.body;
 
-    if (!url) {
-        return res.status(400).json({ error: 'URL parameter is required' });
+    console.log('URL:', url); // Debugging line
+    console.log('IP Address:', ipAddress); // Debugging line
+
+    if (!url || !ipAddress) {
+        return res.status(400).json({ error: 'URL parameter and ipAddress is needed' });
     }
 
     try {
-        const { db, client } = await createConnection('canITrustYou');  // Assuming this function establishes and returns a DB connection
+        const { db, client } = await createConnection('canITrustYou'); 
         const checkStatus = await checkedData(db, url, ipAddress);
         await client.close();
 
