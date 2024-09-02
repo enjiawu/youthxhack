@@ -401,6 +401,24 @@ app.post('/api/ssl-data', async (req, res) => {
     }
 });
 
+async function checkIfUrlIsBlocked(url) {
+    url = normalizeURL(url);
+    console.log("URL CHECKED ", url);
+    // Example logic
+    const blockedUrls = ['https://www.malicious.com/', 'https://www.phishing.com/'];
+    return blockedUrls.includes(url);
+}
+
+app.get('/api/check-url', async (req, res) => {
+    const { url } = req.query;
+    // Perform your logic to determine if the URL is safe
+    // For example, you can check it against a list of unsafe URLs in your database
+    const isBlocked = await checkIfUrlIsBlocked(url);
+    console.log("IS IT BLOCKED? ", isBlocked);
+
+    res.json({ block: isBlocked });
+});
+
 const GOOGLE_SAFE_API_KEY = 'AIzaSyByeLBjadSQnJ7AdU5SIcV7ZBKZwRu0eCk';
 const GOOGLE_SAFE_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_SAFE_API_KEY}`;
 

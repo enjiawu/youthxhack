@@ -93,7 +93,6 @@ export default class LinkAuthentication extends Component {
             }
         });
         const data = await response1.json();
-
       // Update the component's state with the fetched data
       this.setState({
         issuer: data.issuer.O,
