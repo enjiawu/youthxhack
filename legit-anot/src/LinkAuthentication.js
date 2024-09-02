@@ -81,99 +81,37 @@ export default class LinkAuthentication extends Component {
     });
   };
   
-  fetchSslCert = async (url) => {
-    url = normalizeURL(url);
-    
+  fetchChecks = async (url) => {
     try {
-        // First, check if the SSL data already exists in your MongoDB collection
-        const response1 = await fetch(`http://localhost:5050/api/ssl-data?url=${encodeURIComponent(url)}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        const data = await response1.json();
-      // Update the component's state with the fetched data
-      this.setState({
-        issuer: data.issuer.O,
-        valid_from: data.valid_from.slice(0, 6) + data.valid_from.slice(15, 20),
-        valid_to: data.valid_to.slice(0, 6) + data.valid_to.slice(15, 20)
+      const response = await fetch(`http://localhost:5050/api/checked?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Fetched checks successfully:', data);
+  
+      // Assuming 'checks' is the number of times the URL has been checked
+      this.setState({ checks: (data.checkCount/data.averageChecks) * 100 });
 
-      if (this.state.issuer === 'NA') {
-        console.log("No SSL certificate found");
+      if (this.state.checks < 75) {
+        this.state.overallRating += 20;
       }
-      else if (trustedProviders.includes(this.state.issuer)) {
-        this.state.overallRating += 25;
+      else if (this.state.checks < 110) {
+        this.state.overallRating += 10;
       }
-      else {
-        this.state.overallRating += 12.5;
-      }
-
       console.log(this.state.overallRating);
 
-        if (response1.ok) {
-            // If data exists in the collection, use it
-            const sslData = await response1.json();
-            console.log('SSL data found in collection:', sslData);
-            this.setState({
-                issuer: sslData.issuer.O, // Use the issuer from the stored data
-                valid_from: sslData.valid_from,
-                valid_to: sslData.valid_to
-            });
-            console.log(sslData.O);
-        } else {
-           // If no data in the collection, fetch the SSL certificate directly
-           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-          });
-
-          if (!response2.ok) {
-              throw new Error('Network response was not ok');
-          }
-
-          const sslCertData = await response2.json();
-          console.log('Fetched SSL cert successfully:', sslCertData);
-          console.log(sslCertData.issuer);
-
-          // Update the component's state with the fetched data
-          this.setState({
-              issuer: sslCertData.issuer.O,
-              valid_from: sslCertData.valid_from,
-              valid_to: sslCertData.valid_to
-          });
-          console.log(sslCertData.issuer.O);
-
-          // After fetching the SSL certificate, store it in your MongoDB collection
-          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                  url: url,
-                  issuer: sslCertData.issuer.O,
-                  valid_from: sslCertData.valid_from,
-                  valid_to: sslCertData.valid_to
-              })
-          });
-
-          if (postResponse.ok) {
-              console.log('SSL data saved to collection successfully');
-          } else {
-              console.error('Failed to save SSL data to collection');
-          }
-        }
     } catch (error) {
-        console.error('Error fetching SSL cert:', error);
-    } finally {
-      console.log(this.state.issuer)
-      console.log("MY ISSUER")
+      console.error('Error checking website safety:', error);
     }
-  }
+  };
 
   fetchLikesDislikes = async (url) => {
     try {
@@ -229,7 +167,7 @@ export default class LinkAuthentication extends Component {
         totalVisits: data,
       });
 
-      if (this.state.pagesPerVisit > 5000) {
+      if (this.state.pagesPerVisit.monthly > 5000) {
         this.state.overallRating += 5;
       }
 
@@ -280,7 +218,7 @@ export default class LinkAuthentication extends Component {
         visitDuration: data,
       });
 
-      if (this.state.visitDuration > 2) {
+      if (this.state.visitDuration.monthly > 2) {
         this.state.overallRating += 5;
       }
       console.log(this.state.overallRating);
@@ -310,7 +248,7 @@ export default class LinkAuthentication extends Component {
         pagesPerVisit: data,
       });
 
-      if (this.state.pagesPerVisit > 2) {
+      if (this.state.pagesPerVisit.monthly > 2) {
         this.state.overallRating += 5;
       }
       console.log(this.state.overallRating);
@@ -352,7 +290,7 @@ export default class LinkAuthentication extends Component {
         bounceRate: data,
       });
 
-      if (this.state.bounceRate < 75) {
+      if (this.state.bounceRate.monthly < 75) {
         this.state.overallRating += 5;
       }
       console.log(this.state.overallRating);
@@ -516,19 +454,25 @@ export default class LinkAuthentication extends Component {
 
   getBarColor() {
     const communityRating = this.state.communityRating;
-    if (communityRating < 60) {
-      this.state.barColor = '#FF0000'; // Red
-    } else if (communityRating < 80) {
-      this.state.barColor = '#FFC107'; // Amber 
+    if (communityRating <= 30) {
+      return '#FF0000'; // Red
+    } else if (communityRating <= 80) {
+      return '#FFC107'; // Amber 
     } else {
-      this.state.barColor = '#28A745'; // Green
+      return'#28A745'; // Green
     }
-    console.log(this.state.communityRating);
   }
 
   handleVote = () => {
     this.setState({ isVoted: true });
   }
+
+  getOverallBarColor = () => {
+    const { overallRating } = this.state;
+    if (overallRating <= 30) return '#FF0000';
+    if (overallRating <= 80) return '#FFC107';
+    return '#28A745';
+  };
 
   handleUpvote = async (url) => {
     if (this.state.isVoted) {
@@ -679,37 +623,99 @@ export default class LinkAuthentication extends Component {
     console.log(this.state.overallRating);
   }
 
-  fetchChecks = async (url) => {
+  fetchSslCert = async (url) => {
+    url = normalizeURL(url);
+    
     try {
-      const response = await fetch(`http://localhost:5050/api/checked?url=${encodeURIComponent(url)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        // First, check if the SSL data already exists in your MongoDB collection
+        const response1 = await fetch(`http://localhost:5050/api/ssl-data?url=${encodeURIComponent(url)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const data = await response1.json();
+      // Update the component's state with the fetched data
+      this.setState({
+        issuer: data.issuer.O,
+        valid_from: data.valid_from.slice(0, 6) + data.valid_from.slice(15, 20),
+        valid_to: data.valid_to.slice(0, 6) + data.valid_to.slice(15, 20)
       });
-  
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      const data = await response.json();
-      console.log('Fetched checks successfully:', data);
-  
-      // Assuming 'checks' is the number of times the URL has been checked
-      this.setState({ checks: (data.checkCount/data.averageChecks) * 100 });
 
-      if (this.state.checks < 75) {
-        this.state.overallRating += 20;
+      if (this.state.issuer === 'NA') {
+        console.log("No SSL certificate found");
       }
-      else if (this.state.checks < 110) {
-        this.state.overallRating += 10;
+      else if (trustedProviders.includes(this.state.issuer)) {
+        this.state.overallRating += 25;
       }
+      else {
+        this.state.overallRating += 12.5;
+      }
+
       console.log(this.state.overallRating);
 
+        if (response1.ok) {
+            // If data exists in the collection, use it
+            const sslData = await response1.json();
+            console.log('SSL data found in collection:', sslData);
+            this.setState({
+                issuer: sslData.issuer.O, // Use the issuer from the stored data
+                valid_from: sslData.valid_from,
+                valid_to: sslData.valid_to
+            });
+            console.log(sslData.O);
+        } else {
+           // If no data in the collection, fetch the SSL certificate directly
+           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+          });
+
+          if (!response2.ok) {
+              throw new Error('Network response was not ok');
+          }
+
+          const sslCertData = await response2.json();
+          console.log('Fetched SSL cert successfully:', sslCertData);
+          console.log(sslCertData.issuer);
+
+          // Update the component's state with the fetched data
+          this.setState({
+              issuer: sslCertData.issuer.O,
+              valid_from: sslCertData.valid_from,
+              valid_to: sslCertData.valid_to
+          });
+          console.log(sslCertData.issuer.O);
+
+          // After fetching the SSL certificate, store it in your MongoDB collection
+          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  url: url,
+                  issuer: sslCertData.issuer.O,
+                  valid_from: sslCertData.valid_from,
+                  valid_to: sslCertData.valid_to
+              })
+          });
+
+          if (postResponse.ok) {
+              console.log('SSL data saved to collection successfully');
+          } else {
+              console.error('Failed to save SSL data to collection');
+          }
+        }
     } catch (error) {
-      console.error('Error checking website safety:', error);
+        console.error('Error fetching SSL cert:', error);
+    } finally {
+      console.log(this.state.issuer)
+      console.log("MY ISSUER")
     }
-  };
+  }
 
   // Function to format numbers
   formatNumber = (num) => {
@@ -728,7 +734,9 @@ export default class LinkAuthentication extends Component {
   };
 
   render() {
-      const ratingClass = this.getRatingClass();
+      const { overallRating, ratingClass } = this.state;
+      const barColor = this.getBarColor();
+      const overallBarColor = this.getOverallBarColor();
 
       return (
           <div>
@@ -742,7 +750,7 @@ export default class LinkAuthentication extends Component {
           </div>{/* /.col */}
           <div className="col-sm-6">
             <ol className="breadcrumb float-sm-right">
-              <li className="breadcrumb-item"><a href="#">Home</a></li>
+              <li className="breadcrumb-item"><a href="/">Home</a></li>
               <li className="breadcrumb-item active">Link Authentication</li>
             </ol>
           </div>{/* /.col */}
@@ -774,7 +782,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); this.fetchChecks(this.state.link); this.setState({ overallRating: 0 }); }}
+                    onClick={() => {this.setState({ overallRating: 0 }); this.fetchChecks(this.state.link); this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); this.fetchSslCert(this.state.link); }}
 
                   >
                     Check
@@ -811,7 +819,7 @@ export default class LinkAuthentication extends Component {
                       <div 
                         className={`progress-bar ${ratingClass}`} 
                         role="progressbar" 
-                        style={{ width: `${this.state.communityRating}%` }}
+                        style={{ width: `${this.state.communityRating}%`, backgroundColor: barColor}}
                         aria-valuenow={this.state.communityRating} 
                         aria-valuemin="0" 
                         aria-valuemax="100"
@@ -826,12 +834,12 @@ export default class LinkAuthentication extends Component {
                       <div 
                         className={`progress-bar ${ratingClass}`} 
                         role="progressbar" 
-                        style={{ width: `${this.state.overallRating}%` }}
-                        aria-valuenow={this.state.overallRating} 
+                        style={{ width: `${overallRating}%`, backgroundColor: overallBarColor}}
+                        aria-valuenow={overallRating} 
                         aria-valuemin="0" 
                         aria-valuemax="100"
                       >
-                        {this.state.overallRating}%
+                        {overallRating}%
                       </div>
                     </div>
                   </div>
@@ -853,10 +861,10 @@ export default class LinkAuthentication extends Component {
           trustedProviders.includes(this.state.issuer) ? '#28a745' : 
           this.state.issuer === "NA" ? 'red' : 'yellow' }}>
             <div className="inner">
-              <h4 style ={{color : this.state.issuer === "NA" ? 'white' : 'black'}} id="ssl-cert">{this.state.issuer}</h4>
-              <p style ={{color : this.state.issuer === "NA" ? 'white' : 'black'}}>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title={trustedProviders.includes(this.state.issuer) ? 'The SSL certificate is issued by a trusted provider, ensuring secure and encrypted connections.' : 
+              <h4 style ={{color : this.state.issuer === "NA" ? 'black': 'white' }} id="ssl-cert">{this.state.issuer}</h4>
+              <p style ={{color : this.state.issuer === "NA" ? 'black': 'white'}}>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title={trustedProviders.includes(this.state.issuer) ? 'The SSL certificate is issued by a trusted provider, ensuring secure and encrypted connections.' : 
           this.state.safetyRating === "NA" ? 'There is an existing SSL certificate but it is not issued by a trusted provider. Proceed with caution.' : 'This URL has no SSL certificate! Proceed with caution.'}></i></p>
-              <h8 style ={{color : this.state.issuer === "NA" ? 'white' : 'black'}} id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
+              <h8 style ={{color : this.state.issuer === "NA" ? 'black': 'white'}} id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
             </div>
             <div className="icon">
               <i className="fas fa-lock" />
