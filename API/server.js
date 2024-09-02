@@ -160,15 +160,15 @@ async function fetchOriginOfUsers(database,targetUrl){
 async function fetchAllURLs(database) {
     try {
         // Access the collection
-        const collection = database.collection('traffic');
+        const collection = database.collection('likes');
 
         // Find all documents
         const results = await collection.find({}).toArray();
 
         // Extract the URL from each document
         const urls = results.map(result => result.url);
-        console.log(urls);
-        return urls;
+        console.log(results);
+        return results;
     } catch (error) {
         console.error('Error fetching URLs:', error);
         throw new Error('Error fetching URLs from database');

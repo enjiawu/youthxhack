@@ -102,13 +102,13 @@ export default class LinkSafe extends Component {
       }
       const data = await response.json();
       console.log('Fetched URLs successfully:', data);
-  
-      // Map the fetched URLs into the desired format
-      const websites = data.map((url, index) => ({
+
+      // Map the fetched data into the desired format
+      const websites = data.map((item,index) => ({
         id: index + 1, // Generate a unique ID (e.g., sequential)
-        url: url,
-        likes: 0, // Default value for likes
-        dislikes: 0, // Default value for dislikes
+        url: item.url,
+        likes: item.likes,
+        dislikes: item.dislikes,
       }));
   
       this.setState({
