@@ -13,9 +13,9 @@ export function normalizeURL(url) {
   }
 
   // Ensure 'www.' is present if it's a standard web domain
-  if (!/^https?:\/\/www\./i.test(url)) {
-    url = url.replace(/^https?:\/\//i, 'https://www.');
-  }
+  // if (!/^https?:\/\/www\./i.test(url)) {
+  //   url = url.replace(/^https?:\/\//i, 'https://www.');
+  // }
 
   return url;
 }
