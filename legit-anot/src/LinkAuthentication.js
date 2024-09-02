@@ -825,7 +825,7 @@ export default class LinkAuthentication extends Component {
           {/* Main row */}
           <div className="row">
             <div className='col-12'>
-              <div className="card">
+              <div className="card" style={ {height:'700px'}}>
                     <div className="card-header">
                       <h3 className="card-title">
                         <i className="fas fa-chart-pie mr-1" />
@@ -845,10 +845,10 @@ export default class LinkAuthentication extends Component {
                     <div className="card-body">
                       <div className="tab-content p-0">
                         {/* Morris chart - Sales */}
-                        <div className="chart tab-pane active" id="revenue-chart" style={{position: 'relative', height: 300}}>
+                        <div className="chart tab-pane active" id="revenue-chart" style={{position: 'relative', height: 500}}>
                           <canvas id="originOfUsersBarChart" height={300} style={{height: 300}} />                         
                         </div>
-                        <div className="chart tab-pane" id="sales-chart" style={{position: 'relative', height: 300}}>
+                        <div className="chart tab-pane" id="sales-chart" style={{position: 'relative', height: 500}}>
                           <canvas id="originOfUsersPieChart" height={300} style={{height: 300}} />                         
                         </div>  
                       </div>
