@@ -12,9 +12,9 @@ export function normalizeURL(url) {
   }
 
   // Ensure 'www.' is present if it's a standard web domain
-  if (!/^https?:\/\/www\./i.test(url)) {
+ /* if (!/^https?:\/\/www\./i.test(url)) {
     url = url.replace(/^https?:\/\//i, 'https://www.');
-  }
+  }*/
 
   return url;
 }
@@ -853,10 +853,10 @@ export default class LinkAuthentication extends Component {
           trustedProviders.includes(this.state.issuer) ? '#28a745' : 
           this.state.issuer === "NA" ? 'red' : 'yellow' }}>
             <div className="inner">
-              <h4 style ={{color : trustedProviders.includes(this.state.issuer) ? 'white' : 'black'}} id="ssl-cert">{this.state.issuer}</h4>
-              <p style ={{color : trustedProviders.includes(this.state.issuer) ? 'white' : 'black'}}>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title={trustedProviders.includes(this.state.issuer) ? 'The SSL certificate is issued by a trusted provider, ensuring secure and encrypted connections.' : 
+              <h4 style ={{color : this.state.issuer === "NA" ? 'white' : 'black'}} id="ssl-cert">{this.state.issuer}</h4>
+              <p style ={{color : this.state.issuer === "NA" ? 'white' : 'black'}}>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title={trustedProviders.includes(this.state.issuer) ? 'The SSL certificate is issued by a trusted provider, ensuring secure and encrypted connections.' : 
           this.state.safetyRating === "NA" ? 'There is an existing SSL certificate but it is not issued by a trusted provider. Proceed with caution.' : 'This URL has no SSL certificate! Proceed with caution.'}></i></p>
-              <h8 style ={{color : trustedProviders.includes(this.state.issuer) ? 'white' : 'black'}} id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
+              <h8 style ={{color : this.state.issuer === "NA" ? 'white' : 'black'}} id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
             </div>
             <div className="icon">
               <i className="fas fa-lock" />
@@ -868,10 +868,10 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: 
           this.state.checks < 75 ? '#28a745' : 
-          this.state.checks < 110 ? 'red' : 'yellow' }}>
+          this.state.checks < 110 ? 'yellow' : 'red' }}>
             <div className="inner">
-              <h3 style ={{color : this.state.checks < 75 ? 'white' : 'black'}}>{this.state.checks.toFixed(2)}<sup style={{ fontSize: 20 }}>%</sup></h3>
-              <p style ={{color : this.state.checks < 75 ? 'white' : 'black'}}>User Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
+              <h3 style ={{color : 75 <= this.state.checks < 75 ? 'white' : 'black'}}>{this.state.checks.toFixed(2)}<sup style={{ fontSize: 20 }}>%</sup></h3>
+              <p style ={{color : 75 <= this.state.checks < 75 ? 'white' : 'black'}}>User Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-check-circle" />
@@ -881,7 +881,7 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: this.state.totalVisits.monthly<=2 ? 'red' : '#28a745'}}>
+          <div className="small-box" style={{ backgroundColor: this.state.totalVisits.monthly < 5000 ? 'red' : '#28a745'}}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.totalVisits.monthly)}</h3>
               <p style ={{color : 'white'}}>Visits <i className="fas fa-info-circle info-icon" title={

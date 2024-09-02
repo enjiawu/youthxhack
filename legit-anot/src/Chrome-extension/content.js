@@ -15,3 +15,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       document.body.prepend(warningDiv);
     }
   });
+
+document.addEventListener('click', function (event) {
+  const target = event.target;
+  if (target.tagName === 'A') {
+    const url = target.href;
+
+    chrome.runtime.sendMessage({ action: 'checkLink', url: url }, function (response) {
+      if (!response.safe) {
+        alert('This link may be dangerous: ' + response.message);
+        event.preventDefault();  // Prevent the default action (e.g., navigating to the link)
+      }
+    });
+  }
+});
+  
