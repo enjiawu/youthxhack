@@ -304,53 +304,53 @@ export default class LinkAuthentication extends Component {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
       console.log('Fetched origin of users successfully:', data); // Debugging line
-
+  
       this.setState({
         originOfUsers: data,
-      }, () =>{
+      }, () => {
         this.renderDonutChart(data); // Render the donut chart with the fetched data
+        this.renderBarChart(data);   // Render the bar chart with the fetched data
       });
     } catch (error) {
       console.error('Error fetching origin of users:', error);
     }
   };
-
+  
   renderDonutChart = (data) => {
     // Extract labels and data for the chart
-    const labels = Object.keys(data); // ['email', 'socialMedia', 'direct', 'organicSearch', 'paidSearch', 'displayAds']
+    const labels = Object.keys(data);
     const chartData = Object.values(data).map(value => {
       if (typeof value === 'object' && value.low !== undefined && value.high !== undefined) {
-        // This handles the Int64 object from MongoDB by combining the low and high parts
         return value.low + (value.high * Math.pow(2, 32));
       }
-      return value; // If not Int64, return as is (in case it's an already-converted value)
+      return value;
     });
   
     const ctx = document.getElementById('originOfUsersPieChart').getContext('2d');
     
     // Destroy existing chart instance if it exists
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
+    if (this.donutChartInstance) {
+      this.donutChartInstance.destroy();
     }
-
+  
     // Create chart data structure
     const dataForChart = {
-      labels: labels, // Example: ['email', 'socialMedia', 'direct', 'organicSearch', 'paidSearch', 'displayAds']
+      labels: labels,
       datasets: [{
-        data: chartData, // Example: [16700000, 430000000, 22700000000, 6400400400, 7900000, 42300000]
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'], // Example colors
+        data: chartData,
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
       }]
     };
   
     // Create new chart instance
-    this.chartInstance = new Chart(ctx, {
+    this.donutChartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: dataForChart,
       options: {
@@ -360,6 +360,64 @@ export default class LinkAuthentication extends Component {
     });
   };
   
+  renderBarChart = (data) => {
+    // Extract labels and data for the chart
+    const labels = Object.keys(data);
+    const chartData = Object.values(data).map(value => {
+      if (typeof value === 'object' && value.low !== undefined && value.high !== undefined) {
+        return value.low + (value.high * Math.pow(2, 32));
+      }
+      return value;
+    });
+  
+    const ctx = document.getElementById('originOfUsersBarChart').getContext('2d');
+    
+    // Destroy existing chart instance if it exists
+    if (this.barChartInstance) {
+      this.barChartInstance.destroy();
+    }
+  
+    // Create chart data structure
+    const dataForChart = {
+      labels: labels,
+      datasets: [{
+        label: 'Number of Users',
+        data: chartData,
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+        borderColor: '#ffffff',
+        borderWidth: 1,
+      }]
+    };
+  
+    // Create new chart instance
+    this.barChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: dataForChart,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+          },
+          tooltip: {
+            enabled: true,
+            mode: 'index',
+            intersect: false,
+          }
+        }
+      }
+    });
+  };
+  
+  
+
   getBarColor() {
     const communityRating = this.state.communityRating;
     if (communityRating < 60) {
@@ -792,7 +850,7 @@ export default class LinkAuthentication extends Component {
                 <div className="tab-content p-0">
                   {/* Morris chart - Sales */}
                   <div className="chart tab-pane active" id="revenue-chart" style={{position: 'relative', height: 300}}>
-                    <canvas id="revenue-chart-canvas" height={300} style={{height: 300}} />                         
+                    <canvas id="originOfUsersBarChart" height={300} style={{height: 300}} />                         
                   </div>
                   <div className="chart tab-pane" id="sales-chart" style={{position: 'relative', height: 300}}>
                     <canvas id="originOfUsersPieChart" height={300} style={{height: 300}} />                         
