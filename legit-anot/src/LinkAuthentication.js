@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-
+import Chart from 'chart.js/auto';
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export function normalizeURL(url) {
@@ -8,14 +8,17 @@ export function normalizeURL(url) {
 
   // Add 'https://' if not present
   if (!/^https?:\/\//i.test(url)) {
-      url = `https://${url}`;
+    url = `https://${url}`;
   }
 
-  // Remove 'www.' if it is not present, and add it
-  url = url.replace(/^https:\/\/(?:www\.)?/, 'https://www.');
+  // Ensure 'www.' is present if it's a standard web domain
+  if (!/^https?:\/\/www\./i.test(url)) {
+    url = url.replace(/^https?:\/\//i, 'https://www.');
+  }
 
   return url;
 }
+
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -25,6 +28,7 @@ export default class LinkAuthentication extends Component {
         visitDuration:{},
         pagesPerVisit:{},
         bounceRate:{},
+        originOfUsers:{},
         error:null,
         isSubmitted: false,
         isVoted: false,
@@ -35,8 +39,23 @@ export default class LinkAuthentication extends Component {
         hasThreats: false,
         safetyRating: 'Unknown',
         overallRating: 0,
-        };
+    };
+    this.chartInstance = null; // Add chart instance reference
   }
+
+  state = {
+    link: '',
+    isSubmitted: false,
+    isVoted: false,
+    totalVotes : 0,
+    communityRating: 0,
+    barColor: '#FF0000',
+    issuer: 'NA',
+    valid_from: 'NA',
+    valid_to: 'NA',
+    hasThreats: false,
+    safetyRating: 'Unknown',
+  };
 
   handleInputChange = (event) => {
     this.setState({ link: event.target.value }); // Update the link state on input change
@@ -100,7 +119,61 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 12.5;
       }
 
-      console.log(response1.issuer.O);
+        if (response1.ok) {
+            // If data exists in the collection, use it
+            const sslData = await response1.json();
+            console.log('SSL data found in collection:', sslData);
+            this.setState({
+                issuer: sslData.issuer.O, // Use the issuer from the stored data
+                valid_from: sslData.valid_from,
+                valid_to: sslData.valid_to
+            });
+            console.log(sslData.O);
+        } else {
+           // If no data in the collection, fetch the SSL certificate directly
+           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+          });
+
+          if (!response2.ok) {
+              throw new Error('Network response was not ok');
+          }
+
+          const sslCertData = await response2.json();
+          console.log('Fetched SSL cert successfully:', sslCertData);
+          console.log(sslCertData.issuer);
+
+          // Update the component's state with the fetched data
+          this.setState({
+              issuer: sslCertData.issuer.O,
+              valid_from: sslCertData.valid_from,
+              valid_to: sslCertData.valid_to
+          });
+          console.log(sslCertData.issuer.O);
+
+          // After fetching the SSL certificate, store it in your MongoDB collection
+          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  url: url,
+                  issuer: sslCertData.issuer.O,
+                  valid_from: sslCertData.valid_from,
+                  valid_to: sslCertData.valid_to
+              })
+          });
+
+          if (postResponse.ok) {
+              console.log('SSL data saved to collection successfully');
+          } else {
+              console.error('Failed to save SSL data to collection');
+          }
+        }
     } catch (error) {
         console.error('Error fetching SSL cert:', error);
     } finally {
@@ -166,6 +239,17 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
+      if (data == null) {
+        this.setState({
+          totalVisits: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          totalVisits: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -204,7 +288,6 @@ export default class LinkAuthentication extends Component {
       if (this.state.visitDuration > 2) {
         this.state.overallRating += 5;
       }
-
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -234,6 +317,17 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
+      if (data == null) {
+        this.setState({
+          pagesPerVisit: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          pagesPerVisit: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -263,10 +357,143 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
+      if (data == null) {
+        this.setState({
+          bounceRate: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          bounceRate: data,
+        });
+      }
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
   };
+
+  fetchOriginOfUsers = async (url) => {
+    try {
+      const normalizedUrl = encodeURIComponent(url);
+      const response = await fetch(`http://localhost:5050/getOriginOfUsers?url=${normalizedUrl}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Fetched origin of users successfully:', data); // Debugging line
+  
+      this.setState({
+        originOfUsers: data,
+      }, () => {
+        this.renderDonutChart(data); // Render the donut chart with the fetched data
+        this.renderBarChart(data);   // Render the bar chart with the fetched data
+      });
+    } catch (error) {
+      console.error('Error fetching origin of users:', error);
+    }
+  };
+  
+  renderDonutChart = (data) => {
+    // Extract labels and data for the chart
+    const labels = Object.keys(data);
+    const chartData = Object.values(data).map(value => {
+      if (typeof value === 'object' && value.low !== undefined && value.high !== undefined) {
+        return value.low + (value.high * Math.pow(2, 32));
+      }
+      return value;
+    });
+  
+    const ctx = document.getElementById('originOfUsersPieChart').getContext('2d');
+    
+    // Destroy existing chart instance if it exists
+    if (this.donutChartInstance) {
+      this.donutChartInstance.destroy();
+    }
+  
+    // Create chart data structure
+    const dataForChart = {
+      labels: labels,
+      datasets: [{
+        data: chartData,
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+      }]
+    };
+  
+    // Create new chart instance
+    this.donutChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: dataForChart,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      }
+    });
+  };
+  
+  renderBarChart = (data) => {
+    // Extract labels and data for the chart
+    const labels = Object.keys(data);
+    const chartData = Object.values(data).map(value => {
+      if (typeof value === 'object' && value.low !== undefined && value.high !== undefined) {
+        return value.low + (value.high * Math.pow(2, 32));
+      }
+      return value;
+    });
+  
+    const ctx = document.getElementById('originOfUsersBarChart').getContext('2d');
+    
+    // Destroy existing chart instance if it exists
+    if (this.barChartInstance) {
+      this.barChartInstance.destroy();
+    }
+  
+    // Create chart data structure
+    const dataForChart = {
+      labels: labels,
+      datasets: [{
+        label: 'Number of Users',
+        data: chartData,
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+        borderColor: '#ffffff',
+        borderWidth: 1,
+      }]
+    };
+  
+    // Create new chart instance
+    this.barChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: dataForChart,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+          },
+          tooltip: {
+            enabled: true,
+            mode: 'index',
+            intersect: false,
+          }
+        }
+      }
+    });
+  };
+  
+  
 
   getBarColor() {
     const communityRating = this.state.communityRating;
@@ -494,7 +721,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+                    onClick={() => { this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
 
                   >
                     Check
@@ -683,102 +910,50 @@ export default class LinkAuthentication extends Component {
           </div>
         </div>
         {/* ./col */}
-      </div>
-      </div>)}
-      {/* /.row */}
-      
-        {/* Main row */}
-        <div className="row">
-          {/* Left col */}
-          <section className="col-lg-7 connectedSortable">
-            {/* Custom tabs (Charts with tabs)*/}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">
-                  <i className="fas fa-chart-pie mr-1" />
-                  Sales
-                </h3>
-                <div className="card-tools">
-                  <ul className="nav nav-pills ml-auto">
-                    <li className="nav-item">
-                      <a className="nav-link active" href="#revenue-chart" data-toggle="tab">Area</a>
-                    </li>
-                    <li className="nav-item">
-                      <a className="nav-link" href="#sales-chart" data-toggle="tab">Donut</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>{/* /.card-header */}
-              <div className="card-body">
-                <div className="tab-content p-0">
-                  {/* Morris chart - Sales */}
-                  <div className="chart tab-pane active" id="revenue-chart" style={{position: 'relative', height: 300}}>
-                    <canvas id="revenue-chart-canvas" height={300} style={{height: 300}} />                         
-                  </div>
-                  <div className="chart tab-pane" id="sales-chart" style={{position: 'relative', height: 300}}>
-                    <canvas id="sales-chart-canvas" height={300} style={{height: 300}} />                         
-                  </div>  
-                </div>
-              </div>{/* /.card-body */}
-            </div>
-            {/* /.card */}
-          </section>
-          {/* /.Left col */}
-          {/* right col (We are only adding the ID to make the widgets sortable)*/}
-          <section className="col-lg-5 connectedSortable">
-            {/* solid sales graph */}
-            <div className="card bg-gradient-info">
-              <div className="card-header border-0">
-                <h3 className="card-title">
-                  <i className="fas fa-th mr-1" />
-                  Sales Graph
-                </h3>
-                <div className="card-tools">
-                  <button type="button" className="btn bg-info btn-sm" data-card-widget="collapse">
-                    <i className="fas fa-minus" />
-                  </button>
-                  <button type="button" className="btn bg-info btn-sm" data-card-widget="remove">
-                    <i className="fas fa-times" />
-                  </button>
-                </div>
-              </div>
-              <div className="card-body">
-                <canvas className="chart" id="line-chart" style={{minHeight: 250, height: 250, maxHeight: 250, maxWidth: '100%'}} />
-              </div>
-              {/* /.card-body */}
-              <div className="card-footer bg-transparent">
-                <div className="row">
-                  <div className="col-4 text-center">
-                    <input type="text" className="knob" data-readonly="true" defaultValue={20} data-width={60} data-height={60} data-fgcolor="#39CCCC" />
-                    <div className="text-white">Mail-Orders</div>
-                  </div>
-                  {/* ./col */}
-                  <div className="col-4 text-center">
-                    <input type="text" className="knob" data-readonly="true" defaultValue={50} data-width={60} data-height={60} data-fgcolor="#39CCCC" />
-                    <div className="text-white">Online</div>
-                  </div>
-                  {/* ./col */}
-                  <div className="col-4 text-center">
-                    <input type="text" className="knob" data-readonly="true" defaultValue={30} data-width={60} data-height={60} data-fgcolor="#39CCCC" />
-                    <div className="text-white">In-Store</div>
-                  </div>
-                  {/* ./col */}
-                </div>
-                {/* /.row */}
-              </div>
-              {/* /.card-footer */}
-            </div>
-            {/* /.card */}
-          </section>
-          {/* right col */}
         </div>
+        {/* /.row */}
+          {/* Main row */}
+          <div className="row">
+            <div className='col-12'>
+              <div className="card" style={ {height:'700px'}}>
+                    <div className="card-header">
+                      <h3 className="card-title">
+                        <i className="fas fa-chart-pie mr-1" />
+                        Origin of Users
+                      </h3>
+                      <div className="card-tools">
+                        <ul className="nav nav-pills ml-auto">
+                          <li className="nav-item">
+                            <a className="nav-link active" href="#revenue-chart" data-toggle="tab">Area</a>
+                          </li>
+                          <li className="nav-item">
+                            <a className="nav-link" href="#sales-chart" data-toggle="tab">Donut</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>{/* /.card-header */}
+                    <div className="card-body">
+                      <div className="tab-content p-0">
+                        {/* Morris chart - Sales */}
+                        <div className="chart tab-pane active" id="revenue-chart" style={{position: 'relative', height: 500}}>
+                          <canvas id="originOfUsersBarChart" height={300} style={{height: 300}} />                         
+                        </div>
+                        <div className="chart tab-pane" id="sales-chart" style={{position: 'relative', height: 500}}>
+                          <canvas id="originOfUsersPieChart" height={300} style={{height: 300}} />                         
+                        </div>  
+                      </div>
+                    </div>{/* /.card-body */}
+              </div>
+            </div>
+          </div>
         {/* /.row (main row) */}
+      </div>)}
       </div>{/* /.container-fluid */}
     </section>
     {/* /.content */}
   </div>
 </div>
 
-        )
+      )
     }
 }
