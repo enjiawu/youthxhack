@@ -40,6 +40,8 @@ export default class LinkAuthentication extends Component {
     communityRating: 0,
     barColor: '#FF0000',
     issuer: 'NA',
+    valid_from: 'NA',
+    valid_to: 'NA',
     hasThreats: false,
     safetyRating: 'Unknown',
   };
@@ -57,32 +59,76 @@ export default class LinkAuthentication extends Component {
   
   fetchSslCert = async (url) => {
     url = normalizeURL(url);
+    
     try {
-      // Make a GET request to the /api/likes-dislikes endpoint
-      const response = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      // Check if the response is ok (status code 200-299)
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      // Parse and handle the JSON response
-      const data = await response.json();
-      console.log('Fetched ssl cert successfully:', data);
-      console.log(data.issuer)
+        // First, check if the SSL data already exists in your MongoDB collection
+        const response1 = await fetch(`http://localhost:5050/api/ssl-data?url=${encodeURIComponent(url)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
 
-      // Update the component's state with the fetched data
-      this.setState({
-        issuer: data.issuer.O,
-      });
-      console.log(data.issuer.O);
+        if (response1.ok) {
+            // If data exists in the collection, use it
+            const sslData = await response1.json();
+            console.log('SSL data found in collection:', sslData);
+            this.setState({
+                issuer: sslData.issuer.O, // Use the issuer from the stored data
+                valid_from: sslData.valid_from,
+                valid_to: sslData.valid_to
+            });
+            console.log(sslData.O);
+        } else {
+           // If no data in the collection, fetch the SSL certificate directly
+           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+          });
+
+          if (!response2.ok) {
+              throw new Error('Network response was not ok');
+          }
+
+          const sslCertData = await response2.json();
+          console.log('Fetched SSL cert successfully:', sslCertData);
+          console.log(sslCertData.issuer);
+
+          // Update the component's state with the fetched data
+          this.setState({
+              issuer: sslCertData.issuer.O,
+              valid_from: sslCertData.valid_from,
+              valid_to: sslCertData.valid_to
+          });
+          console.log(sslCertData.issuer.O);
+
+          // After fetching the SSL certificate, store it in your MongoDB collection
+          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  url: url,
+                  issuer: sslCertData.issuer.O,
+                  valid_from: sslCertData.valid_from,
+                  valid_to: sslCertData.valid_to
+              })
+          });
+
+          if (postResponse.ok) {
+              console.log('SSL data saved to collection successfully');
+          } else {
+              console.error('Failed to save SSL data to collection');
+          }
+        }
     } catch (error) {
-      console.error('Error fetching ssl cert:', error);
+        console.error('Error fetching SSL cert:', error);
+    } finally {
+      console.log(this.state.issuer)
+      console.log("MY ISSUER")
     }
   }
 
@@ -121,7 +167,7 @@ export default class LinkAuthentication extends Component {
 
   fetchTotalVisit = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getTrafficObject?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -136,9 +182,17 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched total visits successfully:', data); // Debugging line
 
-      this.setState({
-        totalVisits: data,
-      });
+      if (data == null) {
+        this.setState({
+          totalVisits: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          totalVisits: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -146,7 +200,7 @@ export default class LinkAuthentication extends Component {
 
   fetchVisitDuration = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getVisitDuration?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -160,10 +214,17 @@ export default class LinkAuthentication extends Component {
 
       const data = await response.json();
       console.log('Fetched visit duration successfully:', data); // Debugging line
+      if (data == null) {
+        this.setState({
+          visitDuration: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          visitDuration: data,
+        });
+      }
 
-      this.setState({
-        visitDuration: data,
-      });
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -171,7 +232,7 @@ export default class LinkAuthentication extends Component {
 
   fetchPagesPerVisit = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -186,9 +247,17 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched pages per visit successfully:', data); // Debugging line
 
-      this.setState({
-        pagesPerVisit: data,
-      });
+      if (data == null) {
+        this.setState({
+          pagesPerVisit: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          pagesPerVisit: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -196,7 +265,7 @@ export default class LinkAuthentication extends Component {
 
   fetchBounceRate = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -211,9 +280,16 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched bounce rate successfully:', data); // Debugging line
 
-      this.setState({
-        bounceRate: data,
-      });
+      if (data == null) {
+        this.setState({
+          bounceRate: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          bounceRate: data,
+        });
+      }
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
@@ -437,6 +513,9 @@ export default class LinkAuthentication extends Component {
 
   // Function to format numbers
   formatNumber = (num) => {
+    if (num == undefined){
+      return 'NA';
+    }
     if (num >= 1000000000) {
       return (num / 1000000000).toFixed(1) + 'B';
     } else if (num >= 1000000) {
@@ -610,7 +689,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
             <div className="inner">
-              <h3>{this.state.pagesPerVisit.monthly}</h3>
+              <h3>{this.formatNumber(this.state.pagesPerVisit.monthly)}</h3>
               <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
             </div>
             <div className="icon">
@@ -640,7 +719,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.state.bounceRate.monthly}</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}</h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
