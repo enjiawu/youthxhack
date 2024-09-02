@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import { normalizeURL } from './LinkAuthentication';
+import { Link } from 'react-router-dom'; // Import Link component
+import { withLink } from './LinkContext'; // Import withLink HOC
 
-export default class LinkSafe extends Component {
+class LinkSafe extends Component {
+  
   constructor(props) {
     super(props);
     this.state = {
@@ -118,9 +120,16 @@ export default class LinkSafe extends Component {
       console.error('Error fetching URLs:', error);
     }
   }
+  handleClick = (website) => {
+    const { setLink } = this.props; // Access setLink from props
+    if (setLink) { // Check if setLink exists
+      console.log(website); // Log the `website` object for debugging
+      setLink(website.url); // Set the link in context
+    } else {
+      console.error('setLink function is not available in props.');
+    }
+  };
   
-
- 
 
   render() {
     const { link, websites, sortBy } = this.state;
@@ -201,16 +210,14 @@ export default class LinkSafe extends Component {
                           </div>
                         </div>
                         <div className="card-footer text-center">
-                        <Link
-                          to={{
-                            pathname: '/',
-                            state: { link: website.url }
-                          }}
+                          
+                       <Link
+                          to='/'
+                          onClick={this.handleClick}
                           className="btn btn-primary btn-sm px-5"
                         >
                           See More
                         </Link>
-
                         </div>
                       </div>
                     </div>
@@ -228,3 +235,4 @@ export default class LinkSafe extends Component {
     );
   }
 }
+export default withLink(LinkSafe); 

@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import Chart from 'chart.js/auto';
+import { withLink } from './LinkContext'; // Import withLink HOC
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export function normalizeURL(url) {
@@ -55,6 +56,38 @@ export default class LinkAuthentication extends Component {
     valid_to: 'NA',
     hasThreats: false,
     safetyRating: 'Unknown',
+  };
+
+  componentDidMount() {
+    const { link } = this.props;
+    if (link) {
+      console.log('Received link:', link);
+      this.fetchDataAndUpdateGraphs(link);
+    } else {
+      console.log('No link received');
+    }
+  }
+
+  fetchDataAndUpdateGraphs = async (link) => {
+    console.log('HIII');
+    try {
+      await Promise.all([
+        this.fetchOriginOfUsers(link),
+        this.fetchBounceRate(link),
+        this.fetchPagesPerVisit(link),
+        this.fetchVisitDuration(link),
+        this.fetchTotalVisit(link),
+        this.fetchLikesDislikes(link),
+        this.getBarColor(),
+        this.fetchSslCert(link),
+        this.fetchGoogleSafeBrowsing(link),
+        this.analyzeUrl(link),
+      ]);
+    } catch (error) {
+      console.error('Error during data fetch:', error);
+    } finally {
+      this.setState({ isSubmitted: true });
+    }
   };
 
   handleInputChange = (event) => {
@@ -721,7 +754,7 @@ export default class LinkAuthentication extends Component {
                     className="btn btn-primary"
                     style ={{marginLeft: "10px"}}
                     disabled={!this.state.link} // Disable button if link state is empty
-                    onClick={() => { this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
+                    onClick={() => {this.fetchDataAndUpdateGraphs(this.state.link); this.fetchOriginOfUsers(this.state.link); this.fetchBounceRate(this.state.link); this.fetchPagesPerVisit(this.state.link); this.fetchVisitDuration(this.state.link); this.fetchTotalVisit(this.state.link); this.handleSubmit(); this.fetchLikesDislikes(this.state.link); this.getBarColor(); this.fetchSslCert(this.state.link); this.fetchGoogleSafeBrowsing(this.state.link); this.analyzeUrl(this.state.link); }}
 
                   >
                     Check
