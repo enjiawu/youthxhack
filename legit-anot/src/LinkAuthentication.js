@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export function normalizeURL(url) {
@@ -15,7 +16,6 @@ export function normalizeURL(url) {
 
   return url;
 }
-
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -25,21 +25,18 @@ export default class LinkAuthentication extends Component {
         visitDuration:{},
         pagesPerVisit:{},
         bounceRate:{},
-        error:null
-    };
+        error:null,
+        isSubmitted: false,
+        isVoted: false,
+        totalVotes : 0,
+        communityRating: 0,
+        barColor: '#FF0000',
+        issuer: 'NA',
+        hasThreats: false,
+        safetyRating: 'Unknown',
+        overallRating: 0,
+        };
   }
-
-  state = {
-    link: '',
-    isSubmitted: false,
-    isVoted: false,
-    totalVotes : 0,
-    communityRating: 0,
-    barColor: '#FF0000',
-    issuer: 'NA',
-    hasThreats: false,
-    safetyRating: 'Unknown',
-  };
 
   handleInputChange = (event) => {
     this.setState({ link: event.target.value }); // Update the link state on input change
@@ -77,6 +74,41 @@ export default class LinkAuthentication extends Component {
       this.setState({
         issuer: data.issuer.O,
       });
+
+      const trustedProviders = [
+        'Amazon',
+        'DigiCert',
+        'Comodo',
+        'GlobalSign',
+        'Let\'s Encrypt',
+        'Symantec',
+        'GeoTrust',
+        'Thawte',
+        'RapidSSL',
+        'Entrust',
+        'GoDaddy',
+        'SSL.com',
+        'Actalis',
+        'Certum',
+        'Trustwave',
+        'VeriSign',
+        'QuoVadis',
+        'Starfield',
+        'WoSign',
+        'SECTIGO',
+        'Google Trust Services'
+      ];    
+
+      if (this.state.issuer === 'NA') {
+        console.log("No SSL certificate found");
+      }
+      else if (trustedProviders.includes(this.state.issuer)) {
+        this.state.overallRating += 25;
+      }
+      else {
+        this.state.overallRating += 12.5;
+      }
+
       console.log(data.issuer.O);
     } catch (error) {
       console.error('Error fetching ssl cert:', error);
@@ -136,6 +168,11 @@ export default class LinkAuthentication extends Component {
       this.setState({
         totalVisits: data,
       });
+
+      if (this.state.pagesPerVisit > 5000) {
+        this.state.overallRating += 5;
+      }
+
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -161,6 +198,11 @@ export default class LinkAuthentication extends Component {
       this.setState({
         visitDuration: data,
       });
+
+      if (this.state.visitDuration > 2) {
+        this.state.overallRating += 5;
+      }
+
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -186,6 +228,11 @@ export default class LinkAuthentication extends Component {
       this.setState({
         pagesPerVisit: data,
       });
+
+      if (this.state.pagesPerVisit > 2) {
+        this.state.overallRating += 5;
+      }
+
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -211,6 +258,11 @@ export default class LinkAuthentication extends Component {
       this.setState({
         bounceRate: data,
       });
+
+      if (this.state.bounceRate < 75) {
+        this.state.overallRating += 5;
+      }
+
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
@@ -330,6 +382,11 @@ export default class LinkAuthentication extends Component {
       } else {
         this.clearThreats(); // Call to set state indicating no threats
       }
+
+      if (!this.state.hasThreats) {
+        this.state.overallRating += 10;
+      }
+
     } catch (error) {
       console.error('Error checking website safety:', error);
       // Handle error state if needed
@@ -365,6 +422,13 @@ export default class LinkAuthentication extends Component {
     const safetyRating = rating.includes('low') ? 'Low!!' : rating.includes('medium') ? 'Medium!' : rating.includes('high') ? 'High' : 'Unknown';
     console.log('AI Safety Rating:', safetyRating);
     this.setState({ safetyRating: safetyRating });
+
+    if (this.state.safetyRating === "High") {
+      this.state.overallRating += 20;
+    }
+    else if (this.state.safetyRating === "Medium!") {
+      this.state.overallRating += 10;
+    }
   }
 
   // Function to format numbers
@@ -382,6 +446,7 @@ export default class LinkAuthentication extends Component {
 
   render() {
       const ratingClass = this.getRatingClass();
+
       return (
           <div>
   <div className="content-wrapper">
@@ -604,7 +669,7 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? '#28a745' : 'red'}}>
+          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? 'red' : '#28a745' }}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
               <p style ={{color : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'This link is not a known malicious site'}></i></p>

@@ -201,6 +201,8 @@ app.get("/getBounceRate", async(req,res) =>{
 app.post('/api/upvote', async (req, res) => {
     console.log("CALLED")
     const { url } = req.body;
+    const ipAddress = req.ipAddress;
+
     if (!url) {
         return res.status(400).json({ error: 'URL parameter is required' });
     }
@@ -322,6 +324,22 @@ app.post('/api/check-safe', async (req, res) => {
     } catch (error) {
         console.error('Error checking website safety:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Middleware to log IP addresses
+app.use((req, res, next) => {
+    req.ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    console.log('User IP Address:', req.ipAddress);
+    next();
+});
+
+// Route to return the IP address
+app.get('/api/ip-address', (req, res) => {
+    if (req.ipAddress) {
+        res.json({ ip: req.ipAddress });
+    } else {
+        res.status(404).json({ error: 'IP address not found' });
     }
 });
 
