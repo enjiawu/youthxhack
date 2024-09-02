@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export function normalizeURL(url) {
@@ -15,7 +16,6 @@ export function normalizeURL(url) {
 
   return url;
 }
-
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -25,23 +25,18 @@ export default class LinkAuthentication extends Component {
         visitDuration:{},
         pagesPerVisit:{},
         bounceRate:{},
-        error:null
-    };
+        error:null,
+        isSubmitted: false,
+        isVoted: false,
+        totalVotes : 0,
+        communityRating: 0,
+        barColor: '#FF0000',
+        issuer: 'NA',
+        hasThreats: false,
+        safetyRating: 'Unknown',
+        overallRating: 0,
+        };
   }
-
-  state = {
-    link: '',
-    isSubmitted: false,
-    isVoted: false,
-    totalVotes : 0,
-    communityRating: 0,
-    barColor: '#FF0000',
-    issuer: 'NA',
-    valid_from: 'NA',
-    valid_to: 'NA',
-    hasThreats: false,
-    safetyRating: 'Unknown',
-  };
 
   handleInputChange = (event) => {
     this.setState({ link: event.target.value }); // Update the link state on input change
@@ -66,61 +61,46 @@ export default class LinkAuthentication extends Component {
             }
         });
 
-        if (response1.ok) {
-            // If data exists in the collection, use it
-            const sslData = await response1.json();
-            console.log('SSL data found in collection:', sslData);
-            this.setState({
-                issuer: sslData.issuer.O, // Use the issuer from the stored data
-                valid_from: sslData.valid_from,
-                valid_to: sslData.valid_to
-            });
-            console.log(sslData.O);
-        } else {
-           // If no data in the collection, fetch the SSL certificate directly
-           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-          });
+      // Update the component's state with the fetched data
+      this.setState({
+        issuer: response1.issuer.O,
+      });
 
-          if (!response2.ok) {
-              throw new Error('Network response was not ok');
-          }
+      const trustedProviders = [
+        'Amazon',
+        'DigiCert',
+        'Comodo',
+        'GlobalSign',
+        'Let\'s Encrypt',
+        'Symantec',
+        'GeoTrust',
+        'Thawte',
+        'RapidSSL',
+        'Entrust',
+        'GoDaddy',
+        'SSL.com',
+        'Actalis',
+        'Certum',
+        'Trustwave',
+        'VeriSign',
+        'QuoVadis',
+        'Starfield',
+        'WoSign',
+        'SECTIGO',
+        'Google Trust Services'
+      ];    
 
-          const sslCertData = await response2.json();
-          console.log('Fetched SSL cert successfully:', sslCertData);
-          console.log(sslCertData.issuer);
+      if (this.state.issuer === 'NA') {
+        console.log("No SSL certificate found");
+      }
+      else if (trustedProviders.includes(this.state.issuer)) {
+        this.state.overallRating += 25;
+      }
+      else {
+        this.state.overallRating += 12.5;
+      }
 
-          // Update the component's state with the fetched data
-          this.setState({
-              issuer: sslCertData.issuer.O,
-              valid_from: sslCertData.valid_from,
-              valid_to: sslCertData.valid_to
-          });
-          console.log(sslCertData.issuer.O);
-
-          // After fetching the SSL certificate, store it in your MongoDB collection
-          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                  url: url,
-                  issuer: sslCertData.issuer.O,
-                  valid_from: sslCertData.valid_from,
-                  valid_to: sslCertData.valid_to
-              })
-          });
-
-          if (postResponse.ok) {
-              console.log('SSL data saved to collection successfully');
-          } else {
-              console.error('Failed to save SSL data to collection');
-          }
-        }
+      console.log(response1.issuer.O);
     } catch (error) {
         console.error('Error fetching SSL cert:', error);
     } finally {
@@ -164,8 +144,7 @@ export default class LinkAuthentication extends Component {
 
   fetchTotalVisit = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
-      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${normalizedUrl}`, {
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(normalizeURL(url))}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -179,17 +158,14 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched total visits successfully:', data); // Debugging line
 
-      if (data == null) {
-        this.setState({
-          totalVisits: 'NA',
-        })
-        console.log("NULL DETECTED");
-      } else {
-        this.setState({
-          totalVisits: data,
-        });
+      this.setState({
+        totalVisits: data,
+      });
+
+      if (this.state.pagesPerVisit > 5000) {
+        this.state.overallRating += 5;
       }
-      
+
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -197,13 +173,14 @@ export default class LinkAuthentication extends Component {
 
   fetchVisitDuration = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
-      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${normalizedUrl}`, {
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${encodeURIComponent(normalizeURL(url))}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      console.log('Fetched visit duration successfully:', response); // Debugging line
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -222,6 +199,14 @@ export default class LinkAuthentication extends Component {
         });
       }
 
+      this.setState({
+        visitDuration: data,
+      });
+
+      if (this.state.visitDuration > 2) {
+        this.state.overallRating += 5;
+      }
+
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -229,8 +214,7 @@ export default class LinkAuthentication extends Component {
 
   fetchPagesPerVisit = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
-      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${normalizedUrl}`, {
+      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${encodeURIComponent(normalizeURL(url))}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -244,17 +228,14 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched pages per visit successfully:', data); // Debugging line
 
-      if (data == null) {
-        this.setState({
-          pagesPerVisit: 'NA',
-        })
-        console.log("NULL DETECTED");
-      } else {
-        this.setState({
-          pagesPerVisit: data,
-        });
+      this.setState({
+        pagesPerVisit: data,
+      });
+
+      if (this.state.pagesPerVisit > 2) {
+        this.state.overallRating += 5;
       }
-      
+
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -262,8 +243,7 @@ export default class LinkAuthentication extends Component {
 
   fetchBounceRate = async (url) => {
     try {
-      const normalizedUrl = normalizeURL(encodeURIComponent(url));
-      const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${encodeURIComponent(normalizeURL(url))}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -275,18 +255,15 @@ export default class LinkAuthentication extends Component {
       }
 
       const data = await response.json();
-      console.log('Fetched bounce rate successfully:', data); // Debugging line
 
-      if (data == null) {
-        this.setState({
-          bounceRate: 'NA',
-        })
-        console.log("NULL DETECTED");
-      } else {
-        this.setState({
-          bounceRate: data,
-        });
+      this.setState({
+        bounceRate: data,
+      });
+
+      if (this.state.bounceRate < 75) {
+        this.state.overallRating += 5;
       }
+
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
@@ -406,6 +383,11 @@ export default class LinkAuthentication extends Component {
       } else {
         this.clearThreats(); // Call to set state indicating no threats
       }
+
+      if (!this.state.hasThreats) {
+        this.state.overallRating += 10;
+      }
+
     } catch (error) {
       console.error('Error checking website safety:', error);
       // Handle error state if needed
@@ -441,6 +423,13 @@ export default class LinkAuthentication extends Component {
     const safetyRating = rating.includes('low') ? 'Low!!' : rating.includes('medium') ? 'Medium!' : rating.includes('high') ? 'High' : 'Unknown';
     console.log('AI Safety Rating:', safetyRating);
     this.setState({ safetyRating: safetyRating });
+
+    if (this.state.safetyRating === "High") {
+      this.state.overallRating += 20;
+    }
+    else if (this.state.safetyRating === "Medium!") {
+      this.state.overallRating += 10;
+    }
   }
 
   // Function to format numbers
@@ -461,6 +450,7 @@ export default class LinkAuthentication extends Component {
 
   render() {
       const ratingClass = this.getRatingClass();
+
       return (
           <div>
   <div className="content-wrapper">
@@ -683,7 +673,7 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? '#28a745' : 'red'}}>
+          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? 'red' : '#28a745' }}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
               <p style ={{color : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'This link is not a known malicious site'}></i></p>
