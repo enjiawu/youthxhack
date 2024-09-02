@@ -267,6 +267,8 @@ export default class LinkAuthentication extends Component {
         },
       });
 
+      console.log('Fetched visit duration successfully:', response); // Debugging line
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -352,7 +354,6 @@ export default class LinkAuthentication extends Component {
       }
 
       const data = await response.json();
-      console.log('Fetched bounce rate successfully:', data); // Debugging line
 
       this.setState({
         bounceRate: data,

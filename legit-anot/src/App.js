@@ -12,18 +12,24 @@ import { IpProvider } from './IpContext';
 
 function App() {
   return (
-    <Router>
-      <Header />
-      <Menu />
-      <div>
-        <Routes>
-          <Route path="/" element={<LinkAuthentication />} />
-          <Route path="/link-safe" element={<LinkSafe />} />
-          <Route path="/info" element={<Info />} />
-        </Routes>
-      </div>
-      <Footer />
-    </Router>
+    <IpProvider>
+      <Router>
+        <div>
+          <Header />
+          <Menu />
+          <PrivacyNotice />
+          <div>
+            <Routes>
+              <Route path="/" element={<LinkAuthentication />} />
+              {/* Add more routes as needed */}
+              <Route path="/link-safe" element={<LinkSafe />} />
+              <Route path="/info" element={<Info />} />
+            </Routes>
+          </div>
+          <Footer />
+        </div>
+      </Router>
+    </IpProvider>
   );
 }
 
