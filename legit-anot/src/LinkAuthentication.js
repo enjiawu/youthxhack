@@ -20,6 +20,30 @@ export function normalizeURL(url) {
   return url;
 }
 
+const trustedProviders = [
+  'Amazon',
+  'DigiCert',
+  'Comodo',
+  'GlobalSign',
+  'Let\'s Encrypt',
+  'Symantec',
+  'GeoTrust',
+  'Thawte',
+  'RapidSSL',
+  'Entrust',
+  'GoDaddy',
+  'SSL.com',
+  'Actalis',
+  'Certum',
+  'Trustwave',
+  'VeriSign',
+  'QuoVadis',
+  'Starfield',
+  'WoSign',
+  'SECTIGO',
+  'Google Trust Services'
+];    // List of trusted SSL certificate providers
+
 export default class LinkAuthentication extends Component {
   constructor(props) {
     super(props);
@@ -40,6 +64,9 @@ export default class LinkAuthentication extends Component {
         hasThreats: false,
         safetyRating: 'Unknown',
         overallRating: 0,
+        checks: 0,
+        valid_from: 'NA',
+        valid_to: 'NA'
     };
     this.chartInstance = null; // Add chart instance reference
   }
@@ -112,35 +139,13 @@ export default class LinkAuthentication extends Component {
                 'Content-Type': 'application/json',
             }
         });
-
+        const data = await response1.json();
       // Update the component's state with the fetched data
       this.setState({
-        issuer: response1.issuer.O,
+        issuer: data.issuer.O,
+        valid_from: data.valid_from.slice(0, 6) + data.valid_from.slice(15, 20),
+        valid_to: data.valid_to.slice(0, 6) + data.valid_to.slice(15, 20)
       });
-
-      const trustedProviders = [
-        'Amazon',
-        'DigiCert',
-        'Comodo',
-        'GlobalSign',
-        'Let\'s Encrypt',
-        'Symantec',
-        'GeoTrust',
-        'Thawte',
-        'RapidSSL',
-        'Entrust',
-        'GoDaddy',
-        'SSL.com',
-        'Actalis',
-        'Certum',
-        'Trustwave',
-        'VeriSign',
-        'QuoVadis',
-        'Starfield',
-        'WoSign',
-        'SECTIGO',
-        'Google Trust Services'
-      ];    
 
       if (this.state.issuer === 'NA') {
         console.log("No SSL certificate found");
@@ -151,6 +156,8 @@ export default class LinkAuthentication extends Component {
       else {
         this.state.overallRating += 12.5;
       }
+
+      console.log(this.state.overallRating);
 
         if (response1.ok) {
             // If data exists in the collection, use it
@@ -249,8 +256,9 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchTotalVisit = async (url) => {
+    url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getTrafficObject?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -289,8 +297,9 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchVisitDuration = async (url) => {
+    url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getVisitDuration?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -321,14 +330,16 @@ export default class LinkAuthentication extends Component {
       if (this.state.visitDuration > 2) {
         this.state.overallRating += 5;
       }
+      console.log(this.state.overallRating);
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
   }; 
 
   fetchPagesPerVisit = async (url) => {
+    url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -349,6 +360,7 @@ export default class LinkAuthentication extends Component {
       if (this.state.pagesPerVisit > 2) {
         this.state.overallRating += 5;
       }
+      console.log(this.state.overallRating);
 
       if (data == null) {
         this.setState({
@@ -367,8 +379,9 @@ export default class LinkAuthentication extends Component {
   }; 
 
   fetchBounceRate = async (url) => {
+    url = normalizeURL(url)
     try {
-      const response = await fetch(`http://localhost:5050/getBounceRate?url=${url}`, {
+      const response = await fetch(`http://localhost:5050/getBounceRate?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -389,6 +402,7 @@ export default class LinkAuthentication extends Component {
       if (this.state.bounceRate < 75) {
         this.state.overallRating += 5;
       }
+      console.log(this.state.overallRating);
 
       if (data == null) {
         this.setState({
@@ -406,6 +420,7 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchOriginOfUsers = async (url) => {
+    url = normalizeURL(url)
     try {
       const normalizedUrl = encodeURIComponent(url);
       const response = await fetch(`http://localhost:5050/getOriginOfUsers?url=${normalizedUrl}`, {
@@ -428,6 +443,24 @@ export default class LinkAuthentication extends Component {
         this.renderDonutChart(data); // Render the donut chart with the fetched data
         this.renderBarChart(data);   // Render the bar chart with the fetched data
       });
+
+      const maxItem = Math.max(...Object.values(data));
+      const maxItemKey = Object.keys(data).find(key => data[key] === maxItem);
+      console.log('Max item key:', maxItemKey);
+
+      if (maxItemKey === 'organicSearch') {
+        this.state.overallRating += 10;
+      } else if (maxItemKey === 'direct') {
+        this.state.overallRating += 8;
+      } else if (maxItemKey === 'paidSearch') {
+        this.state.overallRating += 6;
+      } else if (maxItemKey === 'displayAds') {
+        this.state.overallRating += 4;
+      } else if (maxItemKey === 'social') {
+        this.state.overallRating += 2;
+      }
+      console.log(this.state.overallRating);
+      
     } catch (error) {
       console.error('Error fetching origin of users:', error);
     }
@@ -646,6 +679,7 @@ export default class LinkAuthentication extends Component {
       if (!this.state.hasThreats) {
         this.state.overallRating += 10;
       }
+      console.log(this.state.overallRating);
 
     } catch (error) {
       console.error('Error checking website safety:', error);
@@ -689,7 +723,40 @@ export default class LinkAuthentication extends Component {
     else if (this.state.safetyRating === "Medium!") {
       this.state.overallRating += 10;
     }
+    console.log(this.state.overallRating);
   }
+
+  fetchChecks = async (url) => {
+    try {
+      const response = await fetch(`http://localhost:5050/api/checked?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Fetched checks successfully:', data);
+  
+      // Assuming 'checks' is the number of times the URL has been checked
+      this.setState({ checks: (data.checkCount/data.averageChecks) * 100 });
+
+      if (this.state.checks < 75) {
+        this.state.overallRating += 20;
+      }
+      else if (this.state.checks < 110) {
+        this.state.overallRating += 10;
+      }
+      console.log(this.state.overallRating);
+
+    } catch (error) {
+      console.error('Error checking website safety:', error);
+    }
+  };
 
   // Function to format numbers
   formatNumber = (num) => {
@@ -796,7 +863,7 @@ export default class LinkAuthentication extends Component {
                         aria-valuemin="0" 
                         aria-valuemax="100"
                       >
-                        {this.state.communityRating}% total votes: {this.state.totalVotes}
+                        {this.state.communityRating}% | total votes: {this.state.totalVotes}
                       </div>
                     </div>
                   </div>
@@ -806,12 +873,12 @@ export default class LinkAuthentication extends Component {
                       <div 
                         className={`progress-bar ${ratingClass}`} 
                         role="progressbar" 
-                        style={{ width: `${this.state.rating}%` }}
-                        aria-valuenow={this.state.rating} 
+                        style={{ width: `${this.state.overallRating}%` }}
+                        aria-valuenow={this.state.overallRating} 
                         aria-valuemin="0" 
                         aria-valuemax="100"
                       >
-                        {this.state.rating}%
+                        {this.state.overallRating}%
                       </div>
                     </div>
                   </div>
@@ -829,10 +896,14 @@ export default class LinkAuthentication extends Component {
       <div className="row">
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
+          <div className="small-box" style={{ backgroundColor: 
+          trustedProviders.includes(this.state.issuer) ? '#28a745' : 
+          this.state.issuer === "NA" ? 'red' : 'yellow' }}>
             <div className="inner">
-              <h4 id="ssl-cert">{this.state.issuer}</h4>
-              <p>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
+              <h4 style ={{color : trustedProviders.includes(this.state.issuer) ? 'white' : 'black'}} id="ssl-cert">{this.state.issuer}</h4>
+              <p style ={{color : trustedProviders.includes(this.state.issuer) ? 'white' : 'black'}}>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title={trustedProviders.includes(this.state.issuer) ? 'The SSL certificate is issued by a trusted provider, ensuring secure and encrypted connections.' : 
+          this.state.safetyRating === "NA" ? 'There is an existing SSL certificate but it is not issued by a trusted provider. Proceed with caution.' : 'This URL has no SSL certificate! Proceed with caution.'}></i></p>
+              <h8 style ={{color : trustedProviders.includes(this.state.issuer) ? 'white' : 'black'}} id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
             </div>
             <div className="icon">
               <i className="fas fa-lock" />
@@ -842,10 +913,12 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#28a745' }}>
+          <div className="small-box" style={{ backgroundColor: 
+          this.state.checks < 75 ? '#28a745' : 
+          this.state.checks < 110 ? 'red' : 'yellow' }}>
             <div className="inner">
-              <h3>53<sup style={{ fontSize: 20 }}>%</sup></h3>
-              <p>Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
+              <h3 style ={{color : this.state.checks < 75 ? 'white' : 'black'}}>{this.state.checks.toFixed(2)}<sup style={{ fontSize: 20 }}>%</sup></h3>
+              <p style ={{color : this.state.checks < 75 ? 'white' : 'black'}}>User Checks <i className="fas fa-info-circle info-icon" title="Shows the percentage of checks performed for this link within our website"></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-check-circle" />
@@ -855,10 +928,14 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#ffc107' }}>
+          <div className="small-box" style={{ backgroundColor: this.state.totalVisits.monthly<=2 ? 'red' : '#28a745'}}>
             <div className="inner">
-              <h3>{this.formatNumber(this.state.totalVisits.monthly)}</h3>
-              <p>Visits <i className="fas fa-info-circle info-icon" title="Number of times users have visited the site"></i></p>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.totalVisits.monthly)}</h3>
+              <p style ={{color : 'white'}}>Visits <i className="fas fa-info-circle info-icon" title={
+                this.state.totalVisits.monthly > 5000
+                  ? 'The site has over 5000 visits this month, suggesting it is well-regarded and frequently visited. This high level of traffic is generally a positive sign and indicates that the website is likely safe.'
+                  : 'The site has fewer than 5000 visits this month, which may suggest lower traffic or engagement. Proceed with caution as this could indicate potential issues or lower site reputation.'
+              }></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-eye" />
@@ -868,10 +945,14 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
+          <div className="small-box" style={{ backgroundColor: this.state.pagesPerVisit.monthly<=2 ? 'red' : '#28a745' }}>
             <div className="inner">
-              <h3>{this.formatNumber(this.state.pagesPerVisit.monthly)}</h3>
-              <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.pagesPerVisit.monthly)}</h3>
+              <p style ={{color : 'white'}}>Pages per visit <i className="fas fa-info-circle info-icon" title={
+                    this.state.pagesPerVisit.monthly > 2
+                      ? 'The average pages per visit is longer than 2 minutes, indicating that users are active on the site. This is generally a positive sign and suggests that the website is likely safe.'
+                      : 'The average visit duration is 2 pages or shorter, which may indicate that users are typically stagnant on the website. This could be a sign of potential issues or low engagement, so proceed with caution.'
+                  }></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-file-alt" />
@@ -885,10 +966,20 @@ export default class LinkAuthentication extends Component {
       <div className="row">
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#6f42c1' }}>
+          <div className="small-box" style={{ backgroundColor: this.state.visitDuration.monthly<=2 ? 'red' : '#28a745' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}</h3>
-              <p style ={{color : 'white'}}>Average Visit Duration <i className="fas fa-info-circle info-icon" title="Average duration of a single visit to the site, in seconds"></i></p>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.visitDuration.monthly)}<sup style={{ fontSize: 20 }}>mins</sup></h3>
+              <p style={{ color: 'white' }}>
+                Average Visit Duration
+                <i
+                  className="fas fa-info-circle info-icon"
+                  title={
+                    this.state.visitDuration.monthly > 2
+                      ? 'The average visit duration is longer than 2 minutes, indicating that users tend to stay on the site for a good amount of time. This is generally a positive sign and suggests that the website is likely safe.'
+                      : 'The average visit duration is 2 minutes or shorter, which may indicate that users are leaving the site quickly. This could be a sign of potential issues or low engagement, so proceed with caution.'
+                  }
+                ></i>
+              </p>
             </div>
             <div className="icon">
               <i className="fas fa-clock" />
@@ -898,10 +989,17 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
+          <div className="small-box" style={{ backgroundColor: this.state.bounceRate.monthly >=75 ? 'red' : '#28a745'}}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}</h3>
-              <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}<sup style={{ fontSize: 20 }}>%</sup></h3>
+              <p style ={{color : 'white'}}>Bounce Rate <i
+              className="fas fa-info-circle info-icon"
+              title={
+                this.state.bounceRate < 75
+                  ? 'Bounce rate is low, indicating a generally positive user experience. This website is likely safe.'
+                  : 'Bounce rate is high, which could suggest potential issues with the site. Proceed with caution as it may be potentially dangerous.'
+              }
+            ></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-percent" />

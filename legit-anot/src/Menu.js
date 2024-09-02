@@ -7,7 +7,7 @@ export default class Menu extends Component {
             <div>
                 <aside className="main-sidebar sidebar-dark-primary elevation-4">
                     {/* Brand Logo */}
-                    <a href="#" className="brand-link">
+                    <a href="/" className="brand-link">
                         <span className="brand-text font-weight-bold m-2">Legit anot?</span>
                     </a>
                     {/* Sidebar */}
