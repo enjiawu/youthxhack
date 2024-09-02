@@ -37,6 +37,8 @@ export default class LinkAuthentication extends Component {
     communityRating: 0,
     barColor: '#FF0000',
     issuer: 'NA',
+    valid_from: 'NA',
+    valid_to: 'NA',
     hasThreats: false,
     safetyRating: 'Unknown',
   };
@@ -54,32 +56,76 @@ export default class LinkAuthentication extends Component {
   
   fetchSslCert = async (url) => {
     url = normalizeURL(url);
+    
     try {
-      // Make a GET request to the /api/likes-dislikes endpoint
-      const response = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      // Check if the response is ok (status code 200-299)
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      // Parse and handle the JSON response
-      const data = await response.json();
-      console.log('Fetched ssl cert successfully:', data);
-      console.log(data.issuer)
+        // First, check if the SSL data already exists in your MongoDB collection
+        const response1 = await fetch(`http://localhost:5050/api/ssl-data?url=${encodeURIComponent(url)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
 
-      // Update the component's state with the fetched data
-      this.setState({
-        issuer: data.issuer.O,
-      });
-      console.log(data.issuer.O);
+        if (response1.ok) {
+            // If data exists in the collection, use it
+            const sslData = await response1.json();
+            console.log('SSL data found in collection:', sslData);
+            this.setState({
+                issuer: sslData.issuer.O, // Use the issuer from the stored data
+                valid_from: sslData.valid_from,
+                valid_to: sslData.valid_to
+            });
+            console.log(sslData.O);
+        } else {
+           // If no data in the collection, fetch the SSL certificate directly
+           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+          });
+
+          if (!response2.ok) {
+              throw new Error('Network response was not ok');
+          }
+
+          const sslCertData = await response2.json();
+          console.log('Fetched SSL cert successfully:', sslCertData);
+          console.log(sslCertData.issuer);
+
+          // Update the component's state with the fetched data
+          this.setState({
+              issuer: sslCertData.issuer.O,
+              valid_from: sslCertData.valid_from,
+              valid_to: sslCertData.valid_to
+          });
+          console.log(sslCertData.issuer.O);
+
+          // After fetching the SSL certificate, store it in your MongoDB collection
+          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  url: url,
+                  issuer: sslCertData.issuer.O,
+                  valid_from: sslCertData.valid_from,
+                  valid_to: sslCertData.valid_to
+              })
+          });
+
+          if (postResponse.ok) {
+              console.log('SSL data saved to collection successfully');
+          } else {
+              console.error('Failed to save SSL data to collection');
+          }
+        }
     } catch (error) {
-      console.error('Error fetching ssl cert:', error);
+        console.error('Error fetching SSL cert:', error);
+    } finally {
+      console.log(this.state.issuer)
+      console.log("MY ISSUER")
     }
   }
 
@@ -118,7 +164,7 @@ export default class LinkAuthentication extends Component {
 
   fetchTotalVisit = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getTrafficObject?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -133,9 +179,17 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched total visits successfully:', data); // Debugging line
 
-      this.setState({
-        totalVisits: data,
-      });
+      if (data == null) {
+        this.setState({
+          totalVisits: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          totalVisits: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -143,7 +197,7 @@ export default class LinkAuthentication extends Component {
 
   fetchVisitDuration = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getVisitDuration?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -157,10 +211,17 @@ export default class LinkAuthentication extends Component {
 
       const data = await response.json();
       console.log('Fetched visit duration successfully:', data); // Debugging line
+      if (data == null) {
+        this.setState({
+          visitDuration: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          visitDuration: data,
+        });
+      }
 
-      this.setState({
-        visitDuration: data,
-      });
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -168,7 +229,7 @@ export default class LinkAuthentication extends Component {
 
   fetchPagesPerVisit = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -183,9 +244,17 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched pages per visit successfully:', data); // Debugging line
 
-      this.setState({
-        pagesPerVisit: data,
-      });
+      if (data == null) {
+        this.setState({
+          pagesPerVisit: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          pagesPerVisit: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -193,7 +262,7 @@ export default class LinkAuthentication extends Component {
 
   fetchBounceRate = async (url) => {
     try {
-      const normalizedUrl = encodeURIComponent(url);
+      const normalizedUrl = normalizeURL(encodeURIComponent(url));
       const response = await fetch(`http://localhost:5050/getBounceRate?url=${normalizedUrl}`, {
         method: 'GET',
         headers: {
@@ -208,9 +277,16 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched bounce rate successfully:', data); // Debugging line
 
-      this.setState({
-        bounceRate: data,
-      });
+      if (data == null) {
+        this.setState({
+          bounceRate: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          bounceRate: data,
+        });
+      }
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
@@ -362,12 +438,16 @@ export default class LinkAuthentication extends Component {
   
     const result = await model.generateContent(prompt);
     const rating = result.response.text().toLowerCase();
-    const safetyRating = rating.includes('low') ? 'Low' : rating.includes('medium') ? 'Medium' : rating.includes('high') ? 'High' : 'Unknown';
+    const safetyRating = rating.includes('low') ? 'Low!!' : rating.includes('medium') ? 'Medium!' : rating.includes('high') ? 'High' : 'Unknown';
+    console.log('AI Safety Rating:', safetyRating);
     this.setState({ safetyRating: safetyRating });
   }
 
   // Function to format numbers
   formatNumber = (num) => {
+    if (num == undefined){
+      return 'NA';
+    }
     if (num >= 1000000000) {
       return (num / 1000000000).toFixed(1) + 'B';
     } else if (num >= 1000000) {
@@ -502,7 +582,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#17a2b8' }}>
             <div className="inner">
-              <h3 id="ssl-cert">{this.state.issuer}</h3>
+              <h4 id="ssl-cert">{this.state.issuer}</h4>
               <p>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
             </div>
             <div className="icon">
@@ -541,7 +621,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
             <div className="inner">
-              <h3>{this.state.pagesPerVisit.monthly}</h3>
+              <h3>{this.formatNumber(this.state.pagesPerVisit.monthly)}</h3>
               <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
             </div>
             <div className="icon">
@@ -571,7 +651,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.state.bounceRate.monthly}</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}</h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
@@ -583,14 +663,17 @@ export default class LinkAuthentication extends Component {
         <div className="col-lg-3 col-6">
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: 
-          this.state.safetyRating == "High" ? '#28a745' : 
-          this.state.safetyRating == "Medium" ? 'yellow' : 
-          this.state.safetyRating == "Low" ? 'red' : 
-          this.state.safetyRating == "Unknown" ? 'gray' : 
+          this.state.safetyRating === "High" ? '#28a745' : 
+          this.state.safetyRating === "Medium!" ? 'yellow' : 
+          this.state.safetyRating === "Low!!" ? 'red' : 
+          this.state.safetyRating === "Unknown" ? 'gray' : 
           '#6c757d' }}>
             <div className="inner">
-              <h3 style ={{color : 'black'}}>{this.state.safetyRating}</h3>
-              <p style ={{color : 'black'}}>AI Safety Rating <i className="fas fa-info-circle info-icon" title="Risk rating of link according to AI evaluation"></i></p>
+              <h3 style ={{color : 'white'}}>{this.state.safetyRating}</h3>
+              <p style ={{color : 'white'}}>AI Safety Rating <i className="fas fa-info-circle info-icon" title = {this.state.safetyRating === "High" ? 'According to AI evaluation, this link is safe and legitimate' : 
+              this.state.safetyRating === "Medium!" ? 'According to AI evaluation, this link is neither safe nor dangerous' : 
+              this.state.safetyRating === "Low!!" ? 'According to AI evaluation, this link is dangerous and illegitimate' : 
+              this.state.safetyRating === "Unknown" ? 'gray' : 'AI was not able to evaluate this link'}></i></p>
             </div>
             <div className="icon">
               <i className="fas fa-robot" />
@@ -600,10 +683,10 @@ export default class LinkAuthentication extends Component {
         {/* ./col */}
         <div className="col-lg-3 col-6">
           {/* small box */}
-          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? '#28a745' : '#28a745'}}>
+          <div className="small-box" style={{ backgroundColor: this.state.hasThreats ? '#28a745' : 'red'}}>
             <div className="inner">
               <h3 style ={{color : 'white'}}>{this.state.hasThreats ? 'Yes!' : 'No'}</h3>
-              <p style ={{color : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'Check if link is a known malicious site'}></i></p>
+              <p style ={{color : 'white'}}>Blacklisted <i className="fas fa-info-circle info-icon"  title={this.state.hasThreats ? 'This link is a known malicious site' : 'This link is not a known malicious site'}></i></p>
             </div>
             <div className="icon">
               <i className={this.state.hasThreats ? 'fas fa-exclamation-triangle' : 'fas fa-ban'} />
@@ -650,371 +733,10 @@ export default class LinkAuthentication extends Component {
               </div>{/* /.card-body */}
             </div>
             {/* /.card */}
-            {/* DIRECT CHAT */}
-            <div className="card direct-chat direct-chat-primary">
-              <div className="card-header">
-                <h3 className="card-title">Direct Chat</h3>
-                <div className="card-tools">
-                  <span data-toggle="tooltip" title="3 New Messages" className="badge badge-primary">3</span>
-                  <button type="button" className="btn btn-tool" data-card-widget="collapse">
-                    <i className="fas fa-minus" />
-                  </button>
-                  <button type="button" className="btn btn-tool" data-toggle="tooltip" title="Contacts" data-widget="chat-pane-toggle">
-                    <i className="fas fa-comments" />
-                  </button>
-                  <button type="button" className="btn btn-tool" data-card-widget="remove"><i className="fas fa-times" />
-                  </button>
-                </div>
-              </div>
-              {/* /.card-header */}
-              <div className="card-body">
-                {/* Conversations are loaded here */}
-                <div className="direct-chat-messages">
-                  {/* Message. Default to the left */}
-                  <div className="direct-chat-msg">
-                    <div className="direct-chat-infos clearfix">
-                      <span className="direct-chat-name float-left">Alexander Pierce</span>
-                      <span className="direct-chat-timestamp float-right">23 Jan 2:00 pm</span>
-                    </div>
-                    {/* /.direct-chat-infos */}
-                    <img className="direct-chat-img" src="dist/img/user1-128x128.jpg" alt="message user image" />
-                    {/* /.direct-chat-img */}
-                    <div className="direct-chat-text">
-                      Is this template really for free? That's unbelievable!
-                    </div>
-                    {/* /.direct-chat-text */}
-                  </div>
-                  {/* /.direct-chat-msg */}
-                  {/* Message to the right */}
-                  <div className="direct-chat-msg right">
-                    <div className="direct-chat-infos clearfix">
-                      <span className="direct-chat-name float-right">Sarah Bullock</span>
-                      <span className="direct-chat-timestamp float-left">23 Jan 2:05 pm</span>
-                    </div>
-                    {/* /.direct-chat-infos */}
-                    <img className="direct-chat-img" src="dist/img/user3-128x128.jpg" alt="message user image" />
-                    {/* /.direct-chat-img */}
-                    <div className="direct-chat-text">
-                      You better believe it!
-                    </div>
-                    {/* /.direct-chat-text */}
-                  </div>
-                  {/* /.direct-chat-msg */}
-                  {/* Message. Default to the left */}
-                  <div className="direct-chat-msg">
-                    <div className="direct-chat-infos clearfix">
-                      <span className="direct-chat-name float-left">Alexander Pierce</span>
-                      <span className="direct-chat-timestamp float-right">23 Jan 5:37 pm</span>
-                    </div>
-                    {/* /.direct-chat-infos */}
-                    <img className="direct-chat-img" src="dist/img/user1-128x128.jpg" alt="message user image" />
-                    {/* /.direct-chat-img */}
-                    <div className="direct-chat-text">
-                      Working with AdminLTE on a great new app! Wanna join?
-                    </div>
-                    {/* /.direct-chat-text */}
-                  </div>
-                  {/* /.direct-chat-msg */}
-                  {/* Message to the right */}
-                  <div className="direct-chat-msg right">
-                    <div className="direct-chat-infos clearfix">
-                      <span className="direct-chat-name float-right">Sarah Bullock</span>
-                      <span className="direct-chat-timestamp float-left">23 Jan 6:10 pm</span>
-                    </div>
-                    {/* /.direct-chat-infos */}
-                    <img className="direct-chat-img" src="dist/img/user3-128x128.jpg" alt="message user image" />
-                    {/* /.direct-chat-img */}
-                    <div className="direct-chat-text">
-                      I would love to.
-                    </div>
-                    {/* /.direct-chat-text */}
-                  </div>
-                  {/* /.direct-chat-msg */}
-                </div>
-                {/*/.direct-chat-messages*/}
-                {/* Contacts are loaded here */}
-                <div className="direct-chat-contacts">
-                  <ul className="contacts-list">
-                    <li>
-                      <a href="#">
-                        <img className="contacts-list-img" src="dist/img/user1-128x128.jpg" />
-                        <div className="contacts-list-info">
-                          <span className="contacts-list-name">
-                            Count Dracula
-                            <small className="contacts-list-date float-right">2/28/2015</small>
-                          </span>
-                          <span className="contacts-list-msg">How have you been? I was...</span>
-                        </div>
-                        {/* /.contacts-list-info */}
-                      </a>
-                    </li>
-                    {/* End Contact Item */}
-                    <li>
-                      <a href="#">
-                        <img className="contacts-list-img" src="dist/img/user7-128x128.jpg" />
-                        <div className="contacts-list-info">
-                          <span className="contacts-list-name">
-                            Sarah Doe
-                            <small className="contacts-list-date float-right">2/23/2015</small>
-                          </span>
-                          <span className="contacts-list-msg">I will be waiting for...</span>
-                        </div>
-                        {/* /.contacts-list-info */}
-                      </a>
-                    </li>
-                    {/* End Contact Item */}
-                    <li>
-                      <a href="#">
-                        <img className="contacts-list-img" src="dist/img/user3-128x128.jpg" />
-                        <div className="contacts-list-info">
-                          <span className="contacts-list-name">
-                            Nadia Jolie
-                            <small className="contacts-list-date float-right">2/20/2015</small>
-                          </span>
-                          <span className="contacts-list-msg">I'll call you back at...</span>
-                        </div>
-                        {/* /.contacts-list-info */}
-                      </a>
-                    </li>
-                    {/* End Contact Item */}
-                    <li>
-                      <a href="#">
-                        <img className="contacts-list-img" src="dist/img/user5-128x128.jpg" />
-                        <div className="contacts-list-info">
-                          <span className="contacts-list-name">
-                            Nora S. Vans
-                            <small className="contacts-list-date float-right">2/10/2015</small>
-                          </span>
-                          <span className="contacts-list-msg">Where is your new...</span>
-                        </div>
-                        {/* /.contacts-list-info */}
-                      </a>
-                    </li>
-                    {/* End Contact Item */}
-                    <li>
-                      <a href="#">
-                        <img className="contacts-list-img" src="dist/img/user6-128x128.jpg" />
-                        <div className="contacts-list-info">
-                          <span className="contacts-list-name">
-                            John K.
-                            <small className="contacts-list-date float-right">1/27/2015</small>
-                          </span>
-                          <span className="contacts-list-msg">Can I take a look at...</span>
-                        </div>
-                        {/* /.contacts-list-info */}
-                      </a>
-                    </li>
-                    {/* End Contact Item */}
-                    <li>
-                      <a href="#">
-                        <img className="contacts-list-img" src="dist/img/user8-128x128.jpg" />
-                        <div className="contacts-list-info">
-                          <span className="contacts-list-name">
-                            Kenneth M.
-                            <small className="contacts-list-date float-right">1/4/2015</small>
-                          </span>
-                          <span className="contacts-list-msg">Never mind I found...</span>
-                        </div>
-                        {/* /.contacts-list-info */}
-                      </a>
-                    </li>
-                    {/* End Contact Item */}
-                  </ul>
-                  {/* /.contacts-list */}
-                </div>
-                {/* /.direct-chat-pane */}
-              </div>
-              {/* /.card-body */}
-              <div className="card-footer">
-                <form action="#" method="post">
-                  <div className="input-group">
-                    <input type="text" name="message" placeholder="Type Message ..." className="form-control" />
-                    <span className="input-group-append">
-                      <button type="button" className="btn btn-primary">Send</button>
-                    </span>
-                  </div>
-                </form>
-              </div>
-              {/* /.card-footer*/}
-            </div>
-            {/*/.direct-chat */}
-            {/* TO DO List */}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">
-                  <i className="ion ion-clipboard mr-1" />
-                  To Do List
-                </h3>
-                <div className="card-tools">
-                  <ul className="pagination pagination-sm">
-                    <li className="page-item"><a href="#" className="page-link">«</a></li>
-                    <li className="page-item"><a href="#" className="page-link">1</a></li>
-                    <li className="page-item"><a href="#" className="page-link">2</a></li>
-                    <li className="page-item"><a href="#" className="page-link">3</a></li>
-                    <li className="page-item"><a href="#" className="page-link">»</a></li>
-                  </ul>
-                </div>
-              </div>
-              {/* /.card-header */}
-              <div className="card-body">
-                <ul className="todo-list" data-widget="todo-list">
-                  <li>
-                    {/* drag handle */}
-                    <span className="handle">
-                      <i className="fas fa-ellipsis-v" />
-                      <i className="fas fa-ellipsis-v" />
-                    </span>
-                    {/* checkbox */}
-                    <div className="icheck-primary d-inline ml-2">
-                      <input type="checkbox" defaultValue name="todo1" id="todoCheck1" />
-                      <label htmlFor="todoCheck1" />
-                    </div>
-                    {/* todo text */}
-                    <span className="text">Design a nice theme</span>
-                    {/* Emphasis label */}
-                    <small className="badge badge-danger"><i className="far fa-clock" /> 2 mins</small>
-                    {/* General tools such as edit or delete*/}
-                    <div className="tools">
-                      <i className="fas fa-edit" />
-                      <i className="fas fa-trash-o" />
-                    </div>
-                  </li>
-                  <li>
-                    <span className="handle">
-                      <i className="fas fa-ellipsis-v" />
-                      <i className="fas fa-ellipsis-v" />
-                    </span>
-                    <div className="icheck-primary d-inline ml-2">
-                      <input type="checkbox" defaultValue name="todo2" id="todoCheck2" defaultChecked />
-                      <label htmlFor="todoCheck2" />
-                    </div>
-                    <span className="text">Make the theme responsive</span>
-                    <small className="badge badge-info"><i className="far fa-clock" /> 4 hours</small>
-                    <div className="tools">
-                      <i className="fas fa-edit" />
-                      <i className="fas fa-trash-o" />
-                    </div>
-                  </li>
-                  <li>
-                    <span className="handle">
-                      <i className="fas fa-ellipsis-v" />
-                      <i className="fas fa-ellipsis-v" />
-                    </span>
-                    <div className="icheck-primary d-inline ml-2">
-                      <input type="checkbox" defaultValue name="todo3" id="todoCheck3" />
-                      <label htmlFor="todoCheck3" />
-                    </div>
-                    <span className="text">Let theme shine like a star</span>
-                    <small className="badge badge-warning"><i className="far fa-clock" /> 1 day</small>
-                    <div className="tools">
-                      <i className="fas fa-edit" />
-                      <i className="fas fa-trash-o" />
-                    </div>
-                  </li>
-                  <li>
-                    <span className="handle">
-                      <i className="fas fa-ellipsis-v" />
-                      <i className="fas fa-ellipsis-v" />
-                    </span>
-                    <div className="icheck-primary d-inline ml-2">
-                      <input type="checkbox" defaultValue name="todo4" id="todoCheck4" />
-                      <label htmlFor="todoCheck4" />
-                    </div>
-                    <span className="text">Let theme shine like a star</span>
-                    <small className="badge badge-success"><i className="far fa-clock" /> 3 days</small>
-                    <div className="tools">
-                      <i className="fas fa-edit" />
-                      <i className="fas fa-trash-o" />
-                    </div>
-                  </li>
-                  <li>
-                    <span className="handle">
-                      <i className="fas fa-ellipsis-v" />
-                      <i className="fas fa-ellipsis-v" />
-                    </span>
-                    <div className="icheck-primary d-inline ml-2">
-                      <input type="checkbox" defaultValue name="todo5" id="todoCheck5" />
-                      <label htmlFor="todoCheck5" />
-                    </div>
-                    <span className="text">Check your messages and notifications</span>
-                    <small className="badge badge-primary"><i className="far fa-clock" /> 1 week</small>
-                    <div className="tools">
-                      <i className="fas fa-edit" />
-                      <i className="fas fa-trash-o" />
-                    </div>
-                  </li>
-                  <li>
-                    <span className="handle">
-                      <i className="fas fa-ellipsis-v" />
-                      <i className="fas fa-ellipsis-v" />
-                    </span>
-                    <div className="icheck-primary d-inline ml-2">
-                      <input type="checkbox" defaultValue name="todo6" id="todoCheck6" />
-                      <label htmlFor="todoCheck6" />
-                    </div>
-                    <span className="text">Let theme shine like a star</span>
-                    <small className="badge badge-secondary"><i className="far fa-clock" /> 1 month</small>
-                    <div className="tools">
-                      <i className="fas fa-edit" />
-                      <i className="fas fa-trash-o" />
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              {/* /.card-body */}
-              <div className="card-footer clearfix">
-                <button type="button" className="btn btn-info float-right"><i className="fas fa-plus" /> Add item</button>
-              </div>
-            </div>
-            {/* /.card */}
           </section>
           {/* /.Left col */}
           {/* right col (We are only adding the ID to make the widgets sortable)*/}
           <section className="col-lg-5 connectedSortable">
-            {/* Map card */}
-            <div className="card bg-gradient-primary">
-              <div className="card-header border-0">
-                <h3 className="card-title">
-                  <i className="fas fa-map-marker-alt mr-1" />
-                  Visitors
-                </h3>
-                {/* card tools */}
-                <div className="card-tools">
-                  <button type="button" className="btn btn-primary btn-sm daterange" data-toggle="tooltip" title="Date range">
-                    <i className="far fa-calendar-alt" />
-                  </button>
-                  <button type="button" className="btn btn-primary btn-sm" data-card-widget="collapse" data-toggle="tooltip" title="Collapse">
-                    <i className="fas fa-minus" />
-                  </button>
-                </div>
-                {/* /.card-tools */}
-              </div>
-              <div className="card-body">
-                <div id="world-map" style={{height: 250, width: '100%'}} />
-              </div>
-              {/* /.card-body*/}
-              <div className="card-footer bg-transparent">
-                <div className="row">
-                  <div className="col-4 text-center">
-                    <div id="sparkline-1" />
-                    <div className="text-white">Visitors</div>
-                  </div>
-                  {/* ./col */}
-                  <div className="col-4 text-center">
-                    <div id="sparkline-2" />
-                    <div className="text-white">Online</div>
-                  </div>
-                  {/* ./col */}
-                  <div className="col-4 text-center">
-                    <div id="sparkline-3" />
-                    <div className="text-white">Sales</div>
-                  </div>
-                  {/* ./col */}
-                </div>
-                {/* /.row */}
-              </div>
-            </div>
-            {/* /.card */}
             {/* solid sales graph */}
             <div className="card bg-gradient-info">
               <div className="card-header border-0">
@@ -1056,43 +778,6 @@ export default class LinkAuthentication extends Component {
                 {/* /.row */}
               </div>
               {/* /.card-footer */}
-            </div>
-            {/* /.card */}
-            {/* Calendar */}
-            <div className="card bg-gradient-success">
-              <div className="card-header border-0">
-                <h3 className="card-title">
-                  <i className="far fa-calendar-alt" />
-                  Calendar
-                </h3>
-                {/* tools card */}
-                <div className="card-tools">
-                  {/* button with a dropdown */}
-                  <div className="btn-group">
-                    <button type="button" className="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown">
-                      <i className="fas fa-bars" /></button>
-                    <div className="dropdown-menu float-right" role="menu">
-                      <a href="#" className="dropdown-item">Add new event</a>
-                      <a href="#" className="dropdown-item">Clear events</a>
-                      <div className="dropdown-divider" />
-                      <a href="#" className="dropdown-item">View calendar</a>
-                    </div>
-                  </div>
-                  <button type="button" className="btn btn-success btn-sm" data-card-widget="collapse">
-                    <i className="fas fa-minus" />
-                  </button>
-                  <button type="button" className="btn btn-success btn-sm" data-card-widget="remove">
-                    <i className="fas fa-times" />
-                  </button>
-                </div>
-                {/* /. tools */}
-              </div>
-              {/* /.card-header */}
-              <div className="card-body pt-0">
-                {/*The calendar */}
-                <div id="calendar" style={{width: '100%'}} />
-              </div>
-              {/* /.card-body */}
             </div>
             {/* /.card */}
           </section>
