@@ -79,10 +79,13 @@ export default class LinkAuthentication extends Component {
                 'Content-Type': 'application/json',
             }
         });
+        const data = await response1.json();
 
       // Update the component's state with the fetched data
       this.setState({
-        issuer: response1.issuer.O,
+        issuer: data.issuer.O,
+        valid_from: data.valid_from.slice(0, 6) + data.valid_from.slice(15, 20),
+        valid_to: data.valid_to.slice(0, 6) + data.valid_to.slice(15, 20)
       });
 
       const trustedProviders = [
@@ -216,6 +219,7 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchTotalVisit = async (url) => {
+    url = normalizeURL(url)
     try {
       const response = await fetch(`http://localhost:5050/getTrafficObject?url=${url}`, {
         method: 'GET',
@@ -256,6 +260,7 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchVisitDuration = async (url) => {
+    url = normalizeURL(url)
     try {
       const response = await fetch(`http://localhost:5050/getVisitDuration?url=${url}`, {
         method: 'GET',
@@ -294,6 +299,7 @@ export default class LinkAuthentication extends Component {
   }; 
 
   fetchPagesPerVisit = async (url) => {
+    url = normalizeURL(url)
     try {
       const response = await fetch(`http://localhost:5050/getPagesPerVisit?url=${url}`, {
         method: 'GET',
@@ -334,6 +340,7 @@ export default class LinkAuthentication extends Component {
   }; 
 
   fetchBounceRate = async (url) => {
+    url = normalizeURL(url)
     try {
       const response = await fetch(`http://localhost:5050/getBounceRate?url=${url}`, {
         method: 'GET',
@@ -373,6 +380,7 @@ export default class LinkAuthentication extends Component {
   };
 
   fetchOriginOfUsers = async (url) => {
+    url = normalizeURL(url)
     try {
       const normalizedUrl = encodeURIComponent(url);
       const response = await fetch(`http://localhost:5050/getOriginOfUsers?url=${normalizedUrl}`, {
@@ -800,6 +808,7 @@ export default class LinkAuthentication extends Component {
             <div className="inner">
               <h4 id="ssl-cert">{this.state.issuer}</h4>
               <p>SSL Certificate Authority<i className="fas fa-info-circle info-icon" title="Indicates if the site has a valid SSL certificate"></i></p>
+              <h8 id="ssl-cert">Valid from:{this.state.valid_from} to {this.state.valid_to}</h8>
             </div>
             <div className="icon">
               <i className="fas fa-lock" />
