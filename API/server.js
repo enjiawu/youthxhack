@@ -105,7 +105,6 @@ async function fetchTrafficData(database, targetUrl) {
     try {
         const collection = database.collection('traffic');
         const result = await collection.findOne({ url: targetUrl });
-        console.log(result);
         return result ? result.totalVisit : null;
     } catch (err) {
         console.error('Error:', err);
@@ -157,6 +156,26 @@ async function fetchOriginOfUsers(database,targetUrl){
         throw new Error('Error fetching origin of users');
     }
 }
+
+async function fetchAllURLs(database) {
+    try {
+        // Access the collection
+        const collection = database.collection('traffic');
+
+        // Find all documents
+        const results = await collection.find({}).toArray();
+
+        // Extract the URL from each document
+        const urls = results.map(result => result.url);
+        console.log(urls);
+        return urls;
+    } catch (error) {
+        console.error('Error fetching URLs:', error);
+        throw new Error('Error fetching URLs from database');
+    }
+}
+
+
 
 app.get('/api/likes-dislikes', async (req, res) => {
     const targetUrl = req.query.url;
@@ -241,6 +260,17 @@ app.get("/getOriginOfUsers", async(req,res) =>{
     try {
         const { db, client } = await createConnection('canITrustYou'); 
         const result = await fetchOriginOfUsers(db,targetUrl);
+        await client.close();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    } 
+});
+
+app.get("/getURLs", async(req,res) =>{
+    try {
+        const { db, client } = await createConnection('canITrustYou'); 
+        const result = await fetchAllURLs(db);
         await client.close();
         res.json(result);
     } catch (error) {
