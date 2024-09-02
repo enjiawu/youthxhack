@@ -16,7 +16,6 @@ app.use(cors({
 
 app.use(express.json());
 
-//Function to get Upvotes/Downvotes
 const mongoDbPassword = process.env.MONGODB;
 const uri = "mongodb+srv://ilovemcgriddless:z2aroq2dARlqFASQ@youthhack.ztat8.mongodb.net/";
 
@@ -27,6 +26,29 @@ async function createConnection(dbName) {
     return { db, client };
 }
 
+async function fetchSSLData(database, targetUrl) {
+    try {
+        const collection = database.collection('ssl'); // Collection name: 'ssl'
+        const result = await collection.findOne({ url: targetUrl });
+        return result || null; // Return the result if found, otherwise return null
+    } catch (err) {
+        console.error('Error fetching SSL data:', err);
+        throw new Error('Error fetching SSL data');
+    }
+}
+
+async function insertSslData(database, sslData) {
+    try {
+        const collection = database.collection('ssl');
+        const result = await collection.insertOne(sslData);
+        return result.insertedId;
+    } catch (err) {
+        console.error('Error inserting SSL data:', err);
+        throw new Error('Error inserting SSL data');
+    }
+}
+
+//Function to get Upvotes/Downvotes
 async function fetchLikesDislikes(database, targetUrl) {
     try {
         const collection = database.collection('likes');
@@ -41,6 +63,8 @@ async function fetchLikesDislikes(database, targetUrl) {
         throw new Error('Error fetching likes and dislikes');
     }
 }
+
+
 
 async function upvote(database, targetUrl) {
     try {
@@ -270,6 +294,52 @@ app.get('/api/ssl-cert', async (req, res) => {
         res.json(certificate);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching SSL certificate info' });
+    }
+});
+
+app.get('/api/ssl-data', async (req, res) => {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    try {
+        const { db, client } = await createConnection('canITrustYou');
+        const sslData = await fetchSSLData(db, targetUrl);
+        await client.close();
+        if (sslData) {
+            res.json(sslData);
+        } else {
+            res.status(404).json({ error: 'SSL data not found for the given URL' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/ssl-data', async (req, res) => {
+    const { url, issuer, valid_from, valid_to } = req.body;
+
+    if (!url || !issuer || !valid_from || !valid_to) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const { db, client } = await createConnection('canITrustYou');
+        const sslData = {
+            url,
+            issuer: {
+                O: issuer.O,
+                C: issuer.C
+            },
+            valid_from,
+            valid_to
+        };
+
+        const insertedId = await insertSslData(db, sslData);
+        await client.close();
+        res.status(201).json({ message: 'SSL data inserted successfully', id: insertedId });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
