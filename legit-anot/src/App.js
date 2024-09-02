@@ -12,7 +12,6 @@ import { IpProvider } from './IpContext';
 
 function App() {
   return (
-<<<<<<< HEAD
     <IpProvider>
       <Router>
         <div>
@@ -31,20 +30,6 @@ function App() {
         </div>
       </Router>
     </IpProvider>
-=======
-    <Router>
-      <Header />
-      <Menu />
-      <div>
-        <Routes>
-          <Route path="/" element={<LinkAuthentication />} />
-          <Route path="/link-safe" element={<LinkSafe />} />
-          <Route path="/info" element={<Info />} />
-        </Routes>
-      </div>
-      <Footer />
-    </Router>
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
   );
 }
 

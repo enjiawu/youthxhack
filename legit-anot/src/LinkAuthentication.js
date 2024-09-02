@@ -38,23 +38,6 @@ export default class LinkAuthentication extends Component {
         };
   }
 
-<<<<<<< HEAD
-=======
-  state = {
-    link: '',
-    isSubmitted: false,
-    isVoted: false,
-    totalVotes : 0,
-    communityRating: 0,
-    barColor: '#FF0000',
-    issuer: 'NA',
-    valid_from: 'NA',
-    valid_to: 'NA',
-    hasThreats: false,
-    safetyRating: 'Unknown',
-  };
-
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
   handleInputChange = (event) => {
     this.setState({ link: event.target.value }); // Update the link state on input change
   };
@@ -78,10 +61,9 @@ export default class LinkAuthentication extends Component {
             }
         });
 
-<<<<<<< HEAD
       // Update the component's state with the fetched data
       this.setState({
-        issuer: data.issuer.O,
+        issuer: response1.issuer.O,
       });
 
       const trustedProviders = [
@@ -118,64 +100,7 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 12.5;
       }
 
-      console.log(data.issuer.O);
-=======
-        if (response1.ok) {
-            // If data exists in the collection, use it
-            const sslData = await response1.json();
-            console.log('SSL data found in collection:', sslData);
-            this.setState({
-                issuer: sslData.issuer.O, // Use the issuer from the stored data
-                valid_from: sslData.valid_from,
-                valid_to: sslData.valid_to
-            });
-            console.log(sslData.O);
-        } else {
-           // If no data in the collection, fetch the SSL certificate directly
-           const response2 = await fetch(`http://localhost:5050/api/ssl-cert?url=${encodeURIComponent(url)}`, {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-          });
-
-          if (!response2.ok) {
-              throw new Error('Network response was not ok');
-          }
-
-          const sslCertData = await response2.json();
-          console.log('Fetched SSL cert successfully:', sslCertData);
-          console.log(sslCertData.issuer);
-
-          // Update the component's state with the fetched data
-          this.setState({
-              issuer: sslCertData.issuer.O,
-              valid_from: sslCertData.valid_from,
-              valid_to: sslCertData.valid_to
-          });
-          console.log(sslCertData.issuer.O);
-
-          // After fetching the SSL certificate, store it in your MongoDB collection
-          const postResponse = await fetch(`http://localhost:5050/api/ssl-data`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                  url: url,
-                  issuer: sslCertData.issuer.O,
-                  valid_from: sslCertData.valid_from,
-                  valid_to: sslCertData.valid_to
-              })
-          });
-
-          if (postResponse.ok) {
-              console.log('SSL data saved to collection successfully');
-          } else {
-              console.error('Failed to save SSL data to collection');
-          }
-        }
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
+      console.log(response1.issuer.O);
     } catch (error) {
         console.error('Error fetching SSL cert:', error);
     } finally {
@@ -234,7 +159,6 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched total visits successfully:', data); // Debugging line
 
-<<<<<<< HEAD
       this.setState({
         totalVisits: data,
       });
@@ -243,19 +167,6 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
-=======
-      if (data == null) {
-        this.setState({
-          totalVisits: 'NA',
-        })
-        console.log("NULL DETECTED");
-      } else {
-        this.setState({
-          totalVisits: data,
-        });
-      }
-      
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -288,7 +199,6 @@ export default class LinkAuthentication extends Component {
         });
       }
 
-<<<<<<< HEAD
       this.setState({
         visitDuration: data,
       });
@@ -297,8 +207,6 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
-=======
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -321,7 +229,6 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched pages per visit successfully:', data); // Debugging line
 
-<<<<<<< HEAD
       this.setState({
         pagesPerVisit: data,
       });
@@ -330,19 +237,6 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
-=======
-      if (data == null) {
-        this.setState({
-          pagesPerVisit: 'NA',
-        })
-        console.log("NULL DETECTED");
-      } else {
-        this.setState({
-          pagesPerVisit: data,
-        });
-      }
-      
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -365,7 +259,6 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched bounce rate successfully:', data); // Debugging line
 
-<<<<<<< HEAD
       this.setState({
         bounceRate: data,
       });
@@ -374,18 +267,6 @@ export default class LinkAuthentication extends Component {
         this.state.overallRating += 5;
       }
 
-=======
-      if (data == null) {
-        this.setState({
-          bounceRate: 'NA',
-        })
-        console.log("NULL DETECTED");
-      } else {
-        this.setState({
-          bounceRate: data,
-        });
-      }
->>>>>>> 1334c3227bd73525782a35b1987029fbe3ace482
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
