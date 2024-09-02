@@ -139,6 +139,7 @@ async function fetchBounceRate(database,targetUrl){
     try{
         const collection = database.collection('traffic');
         const result = await collection.findOne({ url: targetUrl });
+        console.log(result);
         return result ? result.bounceRate : null;
     }catch(error){
         console.error(err);
@@ -150,7 +151,6 @@ async function fetchOriginOfUsers(database,targetUrl){
     try{
         const collection = database.collection('traffic');
         const result = await collection.findOne({ url: targetUrl });
-        console.log(result.originOfUsers);
         return result ? result.originOfUsers : null;
     }catch(error){
         console.error(err);
@@ -227,6 +227,7 @@ app.get("/getBounceRate", async(req,res) =>{
     try {
         const { db, client } = await createConnection('canITrustYou'); 
         const result = await fetchBounceRate(db,targetUrl);
+        console.log(result);
         await client.close();
         res.json(result);
     } catch (error) {
@@ -242,7 +243,6 @@ app.get("/getOriginOfUsers", async(req,res) =>{
     try {
         const { db, client } = await createConnection('canITrustYou'); 
         const result = await fetchOriginOfUsers(db,targetUrl);
-        console.log(result);
         await client.close();
         res.json(result);
     } catch (error) {
