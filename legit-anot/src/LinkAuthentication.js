@@ -179,9 +179,17 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched total visits successfully:', data); // Debugging line
 
-      this.setState({
-        totalVisits: data,
-      });
+      if (data == null) {
+        this.setState({
+          totalVisits: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          totalVisits: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching total visits:', error);
     }
@@ -203,10 +211,17 @@ export default class LinkAuthentication extends Component {
 
       const data = await response.json();
       console.log('Fetched visit duration successfully:', data); // Debugging line
+      if (data == null) {
+        this.setState({
+          visitDuration: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          visitDuration: data,
+        });
+      }
 
-      this.setState({
-        visitDuration: data,
-      });
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -229,9 +244,17 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched pages per visit successfully:', data); // Debugging line
 
-      this.setState({
-        pagesPerVisit: data,
-      });
+      if (data == null) {
+        this.setState({
+          pagesPerVisit: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          pagesPerVisit: data,
+        });
+      }
+      
     } catch (error) {
       console.error('Error fetching visit duration:', error);
     }
@@ -254,9 +277,16 @@ export default class LinkAuthentication extends Component {
       const data = await response.json();
       console.log('Fetched bounce rate successfully:', data); // Debugging line
 
-      this.setState({
-        bounceRate: data,
-      });
+      if (data == null) {
+        this.setState({
+          bounceRate: 'NA',
+        })
+        console.log("NULL DETECTED");
+      } else {
+        this.setState({
+          bounceRate: data,
+        });
+      }
     } catch (error) {
       console.error('Error fetching bounce rate:', error);
     }
@@ -415,6 +445,9 @@ export default class LinkAuthentication extends Component {
 
   // Function to format numbers
   formatNumber = (num) => {
+    if (num == undefined){
+      return 'NA';
+    }
     if (num >= 1000000000) {
       return (num / 1000000000).toFixed(1) + 'B';
     } else if (num >= 1000000) {
@@ -588,7 +621,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#dc3545' }}>
             <div className="inner">
-              <h3>{this.state.pagesPerVisit.monthly}</h3>
+              <h3>{this.formatNumber(this.state.pagesPerVisit.monthly)}</h3>
               <p>Pages per visit <i className="fas fa-info-circle info-icon" title="Average number of pages viewed per visit"></i></p>
             </div>
             <div className="icon">
@@ -618,7 +651,7 @@ export default class LinkAuthentication extends Component {
           {/* small box */}
           <div className="small-box" style={{ backgroundColor: '#fd7e14' }}>
             <div className="inner">
-              <h3 style ={{color : 'white'}}>{this.state.bounceRate.monthly}</h3>
+              <h3 style ={{color : 'white'}}>{this.formatNumber(this.state.bounceRate.monthly)}</h3>
               <p style ={{color : 'white'}}>Bounce Rate <i className="fas fa-info-circle info-icon" title="Percentage of visitors who leave the site after viewing only one page"></i></p>
             </div>
             <div className="icon">
