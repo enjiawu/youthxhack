@@ -36,8 +36,8 @@ const Info = () => {
           <h3>Checks (20%)</h3>
           <p style = {{fontSize: "13px", textAlign: "start"}}>Shows the percentage of checks performed for this URL compared to the average checks across all links on our website.</p>
           <ul>
-            <li>Less than 60% of average checks (not very dangerous): <strong>+20%</strong></li>
-            <li>60-110% of average checks (potentially in the danger zone): <strong>+10%</strong></li>
+            <li>Less than 75% of average checks (not very dangerous): <strong>+20%</strong></li>
+            <li>75-110% of average checks (potentially in the danger zone): <strong>+10%</strong></li>
             <li>More than 110% of average checks (most likely dangerous): <strong>0%</strong></li>
           </ul>
         </div>
