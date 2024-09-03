@@ -402,7 +402,6 @@ app.post('/api/ssl-data', async (req, res) => {
 });
 
 async function checkIfUrlIsBlocked(url) {
-    url = normalizeURL(url);
     console.log("URL CHECKED ", url);
     // Example logic
     const blockedUrls = ['https://www.malicious.com/', 'https://www.phishing.com/'];

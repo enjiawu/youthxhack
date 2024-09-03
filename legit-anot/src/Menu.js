@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
+import logo from './logo.jpg';
 
 export default class Menu extends Component {
     render() {
@@ -7,9 +8,14 @@ export default class Menu extends Component {
             <div>
                 <aside className="main-sidebar sidebar-dark-primary elevation-4">
                     {/* Brand Logo */}
-                    <a href="/" className="brand-link">
-                        <span className="brand-text font-weight-bold m-2">Legit anot?</span>
-                    </a>
+                    <div className="d-flex align-items-center">
+                        <div className="brand-logo"></div>
+                        <img src={logo} alt="Logo" className="brand-image img-circle elevation-3" style={{ marginLeft: "20px", width: "40px", height: "40px", opacity: ".8", marginRight: "10px" }} />
+                        <a href="/" className="brand-link">
+                            <span className="brand-text font-weight-bold">Legit anot?</span>
+                        </a>
+                    </div>
+
                     {/* Sidebar */}
                     <div className="sidebar">
                         {/* Sidebar Menu */}
