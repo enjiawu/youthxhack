@@ -1,0 +1,30 @@
+{ 
+    "manifest_version": 3, 
+    "name": "Legit Anot", 
+    "version": "1.0", 
+    "description": "Checks the safety and legitimacy of links before opening them.", 
+    "permissions": [ 
+        "activeTab", 
+        "storage", 
+        "declarativeNetRequest", 
+        "tabs",
+        "scripting",
+        "notifications",
+        "webNavigation"
+    ], 
+    "background": { 
+        "service_worker": "background.js" 
+    }, 
+    "action": { 
+        "default_popup": "popup.html" 
+    }, 
+    "content_scripts": [ 
+        { 
+            "matches": ["<all_urls>"], 
+            "js": ["content.js"] 
+        } 
+    ], 
+    "host_permissions": [ 
+        "<all_urls>" 
+    ] 
+} 
